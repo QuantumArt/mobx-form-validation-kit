@@ -66,7 +66,7 @@ export class FormControl<TEntity = string, TAdditionalData = any> extends FormAb
   }
 
   @observable
-  public additionalData: any;
+  public additionalData: TAdditionalData;
 
   static for<M extends Object, K extends keyof M, TAdditionalData = any>(
     /**
