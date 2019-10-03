@@ -1,6 +1,6 @@
 import { action, computed, when } from 'mobx';
-import { AbstractControl } from 'abstract-control';
-import { FormAbstractControl } from 'form-abstract-control';
+import { AbstractControl } from './abstract-control';
+import { FormAbstractControl } from './form-abstract-control';
 
 export abstract class FormAbstractGroup extends AbstractControl {
   @computed get processing(): boolean {

@@ -1,8 +1,8 @@
 import { action, computed, IReactionDisposer, observable, reaction } from 'mobx';
-import { ValidationEvent } from 'validation-event';
-import { ValidatorFunctionFormControlHandler, UpdateValidValueHandler } from 'events';
-import { FormAbstractControl } from 'form-abstract-control';
-import { ControlTypes } from 'сontrol-types';
+import { ValidationEvent } from './validation-event';
+import { ValidatorFunctionFormControlHandler, UpdateValidValueHandler } from './events';
+import { FormAbstractControl } from './form-abstract-control';
+import { ControlTypes } from './сontrol-types';
 
 export class FormControl<TEntity = string> extends FormAbstractControl {
   private readonly reactionOnInternalValueDisposer: IReactionDisposer;

@@ -1,9 +1,9 @@
 import { action, computed, IReactionDisposer, observable, reaction, runInAction } from 'mobx';
-import { Delegate } from 'delegate';
-import { ControlTypes } from 'сontrol-types';
-import { ValidationEvent } from 'validation-event';
-import { ValidationEventTypes } from 'validation-event-types';
-import { combineErrors } from 'utilites';
+import { Delegate } from './delegate';
+import { ControlTypes } from './сontrol-types';
+import { ValidationEvent } from './validation-event';
+import { ValidationEventTypes } from './validation-event-types';
+import { combineErrors } from './utilites';
 
 export abstract class AbstractControl {
   private readonly reactionOnIsActiveFuncDisposer: IReactionDisposer;

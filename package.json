@@ -3,7 +3,7 @@
   "version": "1.0.4",
   "description": "mobx typescript form control validation",
   "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "typings": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"

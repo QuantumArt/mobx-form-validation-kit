@@ -1,4 +1,4 @@
-import { FormControl } from 'form-control';
+import { FormControl } from './form-control';
 import * as React from 'react';
 
 export class InputFormControl {

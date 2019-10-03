@@ -2,7 +2,7 @@
   "compilerOptions": {
     "declaration": true,
     "declarationDir": "./dist",
-    "baseUrl": "src",
+    "baseUrl": "./src",
     "sourceMap": true,
     "noImplicitAny": true,
     "module": "commonjs",
@@ -18,7 +18,7 @@
     "lib": ["es5", "es6", "es7", "es2017", "dom"],
     "suppressImplicitAnyIndexErrors": true,
     "skipLibCheck": true,
-    "outDir": "dist"
+    "outDir": "./dist"
   },
   "typedocOptions":{
     "mode": "modules",

@@ -1,10 +1,10 @@
 import { action, IReactionDisposer, reaction, runInAction } from 'mobx';
-import { AbstractControls, ValidatorFunctionFormGroupHandler } from 'events';
-import { AbstractControl } from 'abstract-control';
-import { ValidationEvent } from 'validation-event';
-import { FormAbstractGroup } from 'form-abstract-group';
-import { FormAbstractControl } from 'form-abstract-control';
-import { ControlTypes } from 'сontrol-types';
+import { AbstractControls, ValidatorFunctionFormGroupHandler } from './events';
+import { AbstractControl } from './abstract-control';
+import { ValidationEvent } from './validation-event';
+import { FormAbstractGroup } from './form-abstract-group';
+import { FormAbstractControl } from './form-abstract-control';
+import { ControlTypes } from './сontrol-types';
 
 export class FormGroup<TControls extends AbstractControls = AbstractControls> extends FormAbstractGroup {
   public readonly type: ControlTypes = ControlTypes.Group;
