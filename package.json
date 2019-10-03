@@ -1,0 +1,36 @@
+{
+  "name": "@quantumart/mobx-form-validation-kit",
+  "version": "1.0.0",
+  "description": "mobx typescript form control validation",
+  "main": "form.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/QuantumArt/mobx-form-validation-kit"
+  },
+  "bugs": {
+    "url": "https://github.com/QuantumArt/mobx-form-validation-kit/issues"
+  },
+  "author": "Vitalii Alferov (company: http://quantumart.ru/)",
+  "license": "MIT",
+  "dependencies": {
+    "mobx": "4"
+  },
+  "devDependencies": {
+    "tslib": "^1.10.0",
+    "typescript": "^3.5.3",
+    "tslint-config-airbnb": "^5.11.1",
+    "tslint-config-prettier": "^1.18.0",
+    "tslint-plugin-prettier": "^2.0.1"
+  },
+  "keywords": [
+    "npm",
+    "package",
+    "validation",
+    "mobx",
+    "react"
+  ]
+}

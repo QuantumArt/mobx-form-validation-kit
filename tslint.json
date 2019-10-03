@@ -1,0 +1,12 @@
+{
+    "defaultSeverity": "error",
+
+    "extends": ["tslint-config-airbnb", "tslint-config-prettier"],
+    "jsRules": {},
+    "rules": {
+      "prettier": true,
+      "variable-name": [true, "allow-pascal-case", "ban-keywords"],
+      "import-name": false
+    },
+    "rulesDirectory": ["tslint-plugin-prettier"]
+}
