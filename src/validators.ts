@@ -33,7 +33,10 @@ export const notEmptyOrSpaces = (message: string = 'Отсутствует зн�
 };
 
 export const patternValidator = 'pattern';
-/** Ошибка если нет соответствия паттерну */
+/**
+ * Error if there is no pattern matching
+ * / Ошибка, если нет соответствия паттерну
+ */
 export const pattern = (regExp: RegExp, message: string = 'Присутствуют недопустимые символы', eventType = ValidationEventTypes.Error) => {
   return async (control: FormControl): Promise<ValidationEvent[]> => {
     if (regExp.test(control.value)) {
@@ -49,7 +52,10 @@ export const pattern = (regExp: RegExp, message: string = 'Присутству�
   };
 };
 
-/** Ошибка если есть соответствие паттерну */
+/**
+ * Error if there is a pattern match
+ * / Ошибка, если есть соответствие паттерну
+ */
 export const invertPattern = (regExp: RegExp, message: string = 'Присутствуют недопустимые символы', eventType = ValidationEventTypes.Error) => {
   return async (control: FormControl): Promise<ValidationEvent[]> => {
     if (regExp.test(control.value)) {
@@ -113,67 +119,6 @@ export const absoluteLength = (length: number, message: string = `Длина о�
   };
 };
 
-export const birthDayValidator = 'birthDay';
-export const birthDay = <TEntity extends string>(message: string = 'Дата некорректна', eventType = ValidationEventTypes.Error) => {
-  const min: number = new Date(new Date().setFullYear(new Date().getFullYear() - 118)).getTime();
-  const max: number = new Date(new Date().setFullYear(new Date().getFullYear() - 18)).getTime();
-  const pattern = /(\d{2})\.(\d{2})\.(\d{4})/;
-  return async (control: FormControl<TEntity>): Promise<ValidationEvent[]> => {
-    if (control.value == null) {
-      return [];
-    }
-    const date: Date | String = new Date(control.value.replace(pattern, '$3-$2-$1'));
-    if (isNaN(date.getTime())) {
-      return [
-        {
-          message: 'Дата некорректна',
-          key: minValueValidator,
-          type: eventType,
-        },
-      ];
-    }
-    if (date.getTime() > max) {
-      return [
-        {
-          message: 'Дата слишком большая',
-          key: minValueValidator,
-          type: eventType,
-        },
-      ];
-    }
-    if (date.getTime() < min) {
-      return [
-        {
-          message: 'Дата некорректна',
-          key: minValueValidator,
-          type: eventType,
-        },
-      ];
-    }
-    return [];
-  };
-};
-
-export const onlyLetterValidator = 'onlyLetter';
-export const onlyLetter = <TEntity extends string | null>(message: string = 'Неверный формат', eventType = ValidationEventTypes.Error) => {
-  return async (control: FormControl<TEntity>): Promise<ValidationEvent[]> => {
-    if (control.value == null || control.value === '') {
-      return [];
-    }
-    const regExp = new RegExp('^[a-zA-Zа-яА-ЯёЁ-]+$', 'gi');
-    if (!regExp.test(control.value)) {
-      return [
-        {
-          message,
-          key: onlyLetterValidator,
-          type: eventType,
-        },
-      ];
-    }
-    return [];
-  };
-};
-
 export const minValueValidator = 'minValue';
 export const minValue = <TEntity extends number | Date>(
   min: TEntity | (() => TEntity),
@@ -222,25 +167,11 @@ export const maxValue = <TEntity extends number | Date>(
   };
 };
 
-export const notZeroValidator = 'notZero';
-/** не равно 0 */
-export const notZero = (message: string = 'Не должен быть равен 0', eventType = ValidationEventTypes.Error) => {
-  return async (control: FormControl): Promise<ValidationEvent[]> => {
-    if (control.value !== '0') {
-      return [];
-    }
-    return [
-      {
-        message,
-        key: notZeroValidator,
-        type: eventType,
-      },
-    ];
-  };
-};
-
 export const notContainSpacesValidator = 'notContainSpaces';
-/** не содержит проблелов */
+/**
+ * Not contain spaces
+ * / Не содержит проблелов
+ */
 export const notContainSpaces = (message: string = 'Не должен содержать пробелы', eventType = ValidationEventTypes.Error) => {
   return async (control: FormControl): Promise<ValidationEvent[]> => {
     if (control.value == null || !/\s/.test(control.value)) {
@@ -257,7 +188,10 @@ export const notContainSpaces = (message: string = 'Не должен содер
 };
 
 export const compairValidator = 'compair';
-/** обёртка для сложной проверки (ошибка если проверка вернула false) */
+/**
+ * Wrapper for complex validation (error if validation returns false)
+ * / Обёртка для сложной проверки (ошибка, если проверка вернула false)
+ */
 export const compare = <TEntity>(
   expression: (value: TEntity) => boolean,
   message: string = 'Поле не валидно',
@@ -278,7 +212,10 @@ export const compare = <TEntity>(
 };
 
 export const isEqualValidator = 'isEqual';
-/** равно значению {value} **/
+/**
+ * Equals to {value}
+ * / Равно значению {value}
+ */
 export const isEqual = (value: string, message: string = 'Поля не совпадают', eventType = ValidationEventTypes.Error) => {
   return async (control: FormControl): Promise<ValidationEvent[]> => {
     if (control.value == null || control.value !== value) {
@@ -294,18 +231,10 @@ export const isEqual = (value: string, message: string = 'Поля не совп
   };
 };
 
-/** Запускает валидации только после проверки, что поле НЕ является 0 */
-export const wrapperZero = (validators: ValidatorFunctionFormControlHandler<string>[]) => {
-  return async (control: FormControl<string>): Promise<ValidationEvent[]> => {
-    if (control.value == null || control.value === '' || control.value === '0') {
-      return [];
-    }
-    const validations = await Promise.all(validators.map(validator => control.executeAsyncValidation(validator)));
-    return combineErrors(validations);
-  };
-};
-
-/** Запускает валидации только после проверки, что поле НЕ является 0 */
+/**
+ * Runs validations only if activation conditions are met
+ * / Запускает валидации только если условие активации выполнено
+ */
 export const wrapperActivateValidation = <TAbstractControl extends AbstractControl>(
   activate: () => boolean,
   validators: ((control: TAbstractControl) => Promise<ValidationEvent[]>)[],
@@ -324,7 +253,10 @@ export const wrapperActivateValidation = <TAbstractControl extends AbstractContr
   };
 };
 
-/** Следующая валидация запускается, только после того, что предыдущая прошла без ошибок */
+/**
+ * Wrapper for sequential validations (The next validation is launched only after the previous one passed without errors)
+ * / Обертка для последовательных валидаций (Следующая валидация запускается, только после того, что предыдущая прошла без ошибок)
+ */
 export const wrapperSequentialCheck = <TEntity>(validators: ValidatorFunctionFormControlHandler<TEntity>[]) => {
   return async (control: FormControl<TEntity>): Promise<ValidationEvent[]> => {
     for (const validator of validators) {

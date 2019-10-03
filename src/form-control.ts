@@ -4,7 +4,7 @@ import { ValidatorFunctionFormControlHandler, UpdateValidValueHandler } from './
 import { FormAbstractControl } from './form-abstract-control';
 import { ControlTypes } from './сontrol-types';
 
-export class FormControl<TEntity = string> extends FormAbstractControl {
+export class FormControl<TEntity = string, TAdditionalData = any> extends FormAbstractControl {
   private readonly reactionOnInternalValueDisposer: IReactionDisposer;
   private readonly reactionOnIsActiveDisposer: IReactionDisposer;
   private readonly reactionOnIsDirtyDisposer: IReactionDisposer;
@@ -68,7 +68,7 @@ export class FormControl<TEntity = string> extends FormAbstractControl {
   @observable
   public additionalData: any;
 
-  static for<M extends Object, K extends keyof M>(
+  static for<M extends Object, K extends keyof M, TAdditionalData = any>(
     /**
      * Model object containing the editable field
      * Объект модели, содержащий редактируемое поле
@@ -93,7 +93,7 @@ export class FormControl<TEntity = string> extends FormAbstractControl {
      * Additional information
      * Блок с дополнительной информацией
      */
-    additionalData?: any,
+    additionalData?: TAdditionalData,
   ): FormControl<M[K]> {
     return new FormControl<M[K]>(model[fieldName], validators, (value: M[K]) => (model[fieldName] = value), activate, additionalData);
   }
@@ -123,7 +123,7 @@ export class FormControl<TEntity = string> extends FormAbstractControl {
      * Additional information
      * / Блок с дополнительной информацией
      */
-    additionalData: any | null = null,
+    additionalData: TAdditionalData | null = null,
   ) {
     super(activate);
     this.internalValue = value;
