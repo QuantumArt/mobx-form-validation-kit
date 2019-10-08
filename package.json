@@ -1,6 +1,6 @@
 {
   "name": "@quantumart/mobx-form-validation-kit",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "mobx typescript form control validation",
   "main": "./dist/index.js",
   "typings": "./dist/index.d.ts",
