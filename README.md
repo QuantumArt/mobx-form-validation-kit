@@ -1,18 +1,14 @@
 # mobx-form-validation-kit
 
+[![Version](https://img.shields.io/npm/v/@quantumart/mobx-form-validation-kit?style=flat)](https://www.npmjs.com/package/@quantumart/mobx-form-validation-kit)
+[![License](https://img.shields.io/npm/l/@quantumart/mobx-form-validation-kit.svg?style=flat)](https://www.npmjs.com/package/@quantumart/mobx-form-validation-kit)
+[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://www.npmjs.com/package/@quantumart/mobx-form-validation-kit)
+
 - [Структура документа](#table-of-contents)
 	- [Установка](#установка)
 	- [FormControl](#formcontrol)
 	- [Extensions](#extensions)
   - [Пример](#пример)
-
-
-Плюсы пакета:
-  - Полностью на TypeScript
-  - Совместимость с Mobx (версии 4, который поддерживает, всеми любимый, IE10)
-  - Рассчитан на работу в React (можно использовать в проектах и без react)
-  - Рассчитан на асинхронные валидации
-  - Легко встроить в существующий проект.
 
 Плюсы пакета:
   - Полностью на TypeScript
