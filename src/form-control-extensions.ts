@@ -5,12 +5,19 @@ export class InputFormControl {
   public static bindActions(
     formControl: FormControl<string | Date>,
     events?: {
+      ref?(element: HTMLInputElement): void;
       onChange?(event: React.ChangeEvent<HTMLInputElement>): void;
       onBlur?(event: React.FocusEvent<HTMLInputElement>): void;
       onFocus?(event: React.FocusEvent<HTMLInputElement>): void;
     },
   ) {
     return {
+      ref: (element: HTMLInputElement): void => {
+        formControl.element = element;
+        if (!!events) {
+          events.ref && events.ref(element);
+        }
+      },
       onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
         formControl.value = event.target.value;
         if (!!events) {
@@ -38,12 +45,19 @@ export class TextAreaFormControl {
   public static bindActions(
     formControl: FormControl<string | Date>,
     events?: {
+      ref?(element: HTMLTextAreaElement): void;
       onChange?(event: React.ChangeEvent<HTMLTextAreaElement>): void;
       onBlur?(event: React.FocusEvent<HTMLTextAreaElement>): void;
       onFocus?(event: React.FocusEvent<HTMLTextAreaElement>): void;
     },
   ) {
     return {
+      ref: (element: HTMLTextAreaElement): void => {
+        formControl.element = element;
+        if (!!events) {
+          events.ref && events.ref(element);
+        }
+      },
       onChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => {
         formControl.value = event.target.value;
         if (!!events) {

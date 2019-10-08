@@ -73,7 +73,7 @@ export abstract class AbstractControl {
   abstract focused: boolean;
   /**
    * The field contains errors
-   * / Поле содежит ошибки
+   * / Поле содержит ошибки
    */
   @observable.ref
   public errors: ValidationEvent[] = [];
@@ -121,7 +121,7 @@ export abstract class AbstractControl {
   private _serverErrors: string[] = [];
   /**
    * Additional (server) errors
-   * / Пополнительтные (серверные) ошибки
+   * / Дополнительтные (серверные) ошибки
    */
   @computed
   public get serverErrors(): string[] {
