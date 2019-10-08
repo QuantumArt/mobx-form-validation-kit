@@ -1,3 +1,10 @@
+# mobx-form-validation-kit
+
+- [Структура документа](#table-of-contents)
+	- [Установка](#установка)
+	- [FormControl](#formcontrol)
+	- [Extensions](#extensions)
+  - [Пример](#пример)
 
 
 Плюсы пакета:
