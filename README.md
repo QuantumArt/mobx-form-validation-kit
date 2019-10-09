@@ -10,6 +10,7 @@
 	- [FormControl](#formcontrol)
 	- [Extensions](#extensions)
   - [Пример](#пример)
+  - [Об авторе](#обавторе)
 
 ### Плюсы пакета:
   - Полностью на TypeScript
