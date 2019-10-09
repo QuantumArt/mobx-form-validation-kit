@@ -6,9 +6,9 @@
 
 - [Структура документа](#table-of-contents)
   - [Плюсы пакета](#плюсыпакета)
-	- [Установка](#установка)
-	- [FormControl](#formcontrol)
-	- [Extensions](#extensions)
+  - [Установка](#установка)
+  - [FormControl](#formcontrol)
+  - [Extensions](#extensions)
   - [Пример](#пример)
   - [Об авторе](#обавторе)
 
