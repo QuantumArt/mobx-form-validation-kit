@@ -459,3 +459,9 @@ export class RegistrationStore {
 }
 export const registrationStore = new RegistrationStore();
 ```
+
+### Об авторе
+Пакет разработан в компании [Quantum Art](http://www.quantumart.ru)  одним из лидеров рынка разработки технологически сложных интернет/интранет решений.
+
+- Виталий Алферов - ведущий разработчик пакета.
+
