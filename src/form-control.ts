@@ -1,11 +1,12 @@
-import { action, computed, IReactionDisposer, observable, reaction } from 'mobx';
+import { action, autorun, computed, IReactionDisposer, observable, reaction } from 'mobx';
 import { ValidationEvent } from './validation-event';
 import { ValidatorFunctionFormControlHandler, UpdateValidValueHandler } from './events';
 import { FormAbstractControl } from './form-abstract-control';
 import { ControlTypes } from './сontrol-types';
 
 export class FormControl<TEntity = string, TAdditionalData = any> extends FormAbstractControl {
-  private readonly reactionOnInternalValueDisposer: IReactionDisposer;
+  private autoInstallDisposer: IReactionDisposer;
+  private reactionOnInternalValueDisposer: IReactionDisposer;
   private readonly reactionOnIsActiveDisposer: IReactionDisposer;
   private readonly reactionOnIsDirtyDisposer: IReactionDisposer;
   private readonly reactionOnIsFocusedDisposer: IReactionDisposer;
@@ -101,9 +102,9 @@ export class FormControl<TEntity = string, TAdditionalData = any> extends FormAb
   constructor(
     /**
      * Initializing valueI
-     * / Инициализирующие значение
+     * / Инициализирующие значение или его getter
      */
-    value: TEntity,
+    value: TEntity | (() => TEntity),
     /**
      * Validators
      * / Валидаторы
@@ -126,9 +127,9 @@ export class FormControl<TEntity = string, TAdditionalData = any> extends FormAb
     additionalData: TAdditionalData | null = null,
   ) {
     super(activate);
-    this.internalValue = value;
     this.validators = validators;
     this.additionalData = additionalData;
+    this.installInitValue(value);
 
     this.reactionOnIsActiveDisposer = reaction(
       () => this.isActive,
@@ -155,19 +156,40 @@ export class FormControl<TEntity = string, TAdditionalData = any> extends FormAb
         }
       },
     );
-
-    this.reactionOnInternalValueDisposer = reaction(
-      () => this.internalValue,
-      () => {
-        this.isDirty = true;
-        this.serverErrors = [];
-        this.checkInternalValue();
-        this.onChange.call();
-      },
-    );
-
-    this.checkInternalValue();
   }
+
+  public installInitValue = (value: TEntity | (() => TEntity)) => {
+    let isGetterValue: boolean;
+    let valueGetter: () => TEntity;
+
+    if (value instanceof Function) {
+      isGetterValue = true;
+      valueGetter = value;
+    } else {
+      isGetterValue = false;
+      valueGetter = () => value;
+    }
+
+    this.autoInstallDisposer && this.autoInstallDisposer();
+
+    this.autoInstallDisposer = autorun(() => {
+      this.reactionOnInternalValueDisposer && this.reactionOnInternalValueDisposer();
+
+      this.internalValue = valueGetter();
+
+      this.reactionOnInternalValueDisposer = reaction(
+        () => this.internalValue,
+        () => {
+          this.isDirty = true;
+          this.serverErrors = [];
+          this.checkInternalValue();
+          this.onChange.call();
+        },
+      );
+
+      this.checkInternalValue(!isGetterValue);
+    })
+  };
 
   public executeAsyncValidation = (validator: (control: FormControl<TEntity>) => Promise<ValidationEvent[]>): Promise<ValidationEvent[]> =>
     this.baseExecuteAsyncValidation(validator, () => {
@@ -211,17 +233,18 @@ export class FormControl<TEntity = string, TAdditionalData = any> extends FormAb
 
   public dispose = (): void => {
     this.baseDispose();
-    this.reactionOnInternalValueDisposer();
+    this.autoInstallDisposer && this.autoInstallDisposer();
+    this.reactionOnInternalValueDisposer && this.reactionOnInternalValueDisposer();
     this.reactionOnIsActiveDisposer();
     this.reactionOnIsDirtyDisposer();
     this.reactionOnIsFocusedDisposer();
   };
 
   @action
-  private checkInternalValue = () => {
+  private checkInternalValue = (emit: boolean = true) => {
     this.inProcessing = true;
     this.onValidation(this.validators, this.checkInternalValue, () => {
-      if (this.callbackValidValue && this.errors.length === 0) {
+      if (emit && this.callbackValidValue && this.errors.length === 0) {
         this.callbackValidValue(this.internalValue);
       }
       this.inProcessing = false;
