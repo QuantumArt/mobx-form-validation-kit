@@ -1,8 +1,7 @@
 {
   "compilerOptions": {
     "declaration": true,
-    "declarationDir": "./dist",
-    "baseUrl": "./src",
+    "declarationDir": "dist",
     "sourceMap": true,
     "module": "esnext",
     "moduleResolution": "node",
@@ -15,18 +14,17 @@
     "lib": ["es5", "es6", "es7", "es2017", "dom"],
     "strict": true,
     "skipLibCheck": true,
-    "outDir": "./dist"
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "rootDirs": ["src", "tests"],
+    "outDir": "dist"
   },
   "typedocOptions":{
     "mode": "modules",
     "out": "docs"
   },
-  "include": [
-    "src/**/*",
-    "test/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "include": ["src/**/*", "test/**/*"],
+  "exclude": ["node_modules", "dist"]
 }
