@@ -4,14 +4,11 @@
     "declarationDir": "./dist",
     "baseUrl": "./src",
     "sourceMap": true,
-    "noImplicitAny": true,
-    "module": "commonjs",
+    "module": "esnext",
     "moduleResolution": "node",
     "target": "es5",
     "jsx": "react",
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "importHelpers": true,
     "downlevelIteration": true,
@@ -25,7 +22,8 @@
     "out": "docs"
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "test/**/*"
   ],
   "exclude": [
     "node_modules",

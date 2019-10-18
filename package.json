@@ -2,14 +2,15 @@
   "name": "@quantumart/mobx-form-validation-kit",
   "version": "1.1.0",
   "description": "mobx typescript form control validation",
-  "main": "./dist/index.js",
-  "typings": "./dist/index.d.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "typings": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "files": [
-    "/dist"
+    "dist"
   ],
   "repository": {
     "type": "git",
@@ -21,16 +22,26 @@
   "author": "Vitalii Alferov (company: http://quantumart.ru/)",
   "license": "MIT",
   "dependencies": {
-    "mobx": "4",
-    "react": "^16.8.6"
+    "tslib": "^1.10.0"
+  },
+  "peerDependencies": {
+    "mobx": "^4.0.0 || ^5.0.0",
+    "react": "^16.8.0"
   },
   "devDependencies": {
+    "@types/jest": "^24.0.17",
+    "@types/node": "^12.7.2",
     "@types/react": "^16.8.24",
-    "tslib": "^1.10.0",
-    "typescript": "^3.5.3",
+    "jest": "^24.8.0",
+    "mobx": "^4.14.0",
+    "prettier": "^1.18.2",
+    "react": "^16.8.0",
+    "ts-jest": "^24.0.2",
+    "tslint": "^5.20.0",
     "tslint-config-airbnb": "^5.11.1",
     "tslint-config-prettier": "^1.18.0",
-    "tslint-plugin-prettier": "^2.0.1"
+    "tslint-plugin-prettier": "^2.0.1",
+    "typescript": "^3.5.3"
   },
   "prepublish": "tsc",
   "keywords": [
@@ -40,5 +51,31 @@
     "mobx",
     "react",
     "IE10"
-  ]
+  ],
+  "jest": {
+    "collectCoverage": true,
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "src/**/*.ts",
+      "src/**/*.jsx",
+      "src/**/*.tsx"
+    ],
+    "coverageReporters": [
+      "lcov",
+      "text"
+    ],
+    "transform": {
+      "^.+\\.(jsx?|tsx?)$": "ts-jest"
+    },
+    "testRegex": ".+\\.test\\.(jsx?|tsx?)$",
+    "testPathIgnorePatterns": [
+      "/node_modules/"
+    ],
+    "moduleFileExtensions": [
+      "js",
+      "ts",
+      "jsx",
+      "tsx"
+    ]
+  }
 }
