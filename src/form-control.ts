@@ -1,20 +1,109 @@
-import { action, autorun, computed, IReactionDisposer, observable, reaction } from 'mobx';
+import { action, computed, IReactionDisposer, observable, reaction } from 'mobx';
 import { ValidationEvent } from './validation-event';
 import { ValidatorFunctionFormControlHandler, UpdateValidValueHandler } from './events';
 import { FormAbstractControl } from './form-abstract-control';
 import { ControlTypes } from './сontrol-types';
+import { noop } from './utilites';
+
+interface Options<TEntity, TAdditionalData> {
+  /**
+   * Function enable validation by condition (always enabled by default)
+   * Функция включение валидаций по условию (по умолчанию включено всегда)
+   */
+  activate?: (() => boolean) | null;
+  /**
+   * Additional information
+   * Блок с дополнительной информацией
+   */
+  additionalData?: TAdditionalData | null;
+  /**
+   * Validations
+   * Валидациии
+   */
+  validators?: ValidatorFunctionFormControlHandler<TEntity>[];
+  /**
+   * Callback get last valid value
+   * Передает последние валидное значение
+   */
+  setValidValue?: UpdateValidValueHandler<TEntity> | null;
+  /**
+   * Invoke `setValidValue` when `FormControl` is created.
+   * Вызвать `setValidValue` при создании `FormControl`.
+   * @default false
+   * @example
+   * const model = observable({ value: 123 });
+   * new FormControl(
+   *   () => model.value,
+   *   [],
+   *   value => { console.log({ value }); },
+   *   { callSetterOnInitialize: true }
+   * ); // then we see { value: 123 } in console immediately
+   */
+  callSetterOnInitialize?: boolean;
+  /**
+   * Invoke `setValidValue` when value-getter that passed as first argument changes its underlying value.
+   * Вызывать `setValidValue` при каждом изменении результата функции-геттера из первого аргумента.
+   * @default false
+   * @example
+   * const model = observable({ value: 123 });
+   * new FormControl(
+   *   () => model.value,
+   *   [],
+   *   value => { console.log({ value }); },
+   *   { callSetterOnReinitialize: true }
+   * );
+   * model.value = 456; // then we see { value: 456 } in console
+   */
+  callSetterOnReinitialize?: boolean;
+}
+
+interface ModelOptions<TEntity, TAdditionalData> extends Options<TEntity, TAdditionalData> {
+  /**
+   * Apply model field changes to FormControl value changes.
+   * Применять изменения поля модели к полю формы.
+   * @default true
+   */
+  reflectModelChanges?: boolean;
+}
+
+function isOptions<TEntity, TAdditionalData>(arg: any): arg is Options<TEntity, TAdditionalData> {
+  return typeof arg === 'object' && arg !== null && arg.constructor === Object;
+}
+
+function getOptions<TEntity, TAdditionalData>(
+  validators: ValidatorFunctionFormControlHandler<TEntity>[] | Options<TEntity, TAdditionalData> = [],
+  setValidValue?: UpdateValidValueHandler<TEntity> | Options<TEntity, TAdditionalData> | null,
+  activate?: (() => boolean) | Options<TEntity, TAdditionalData> | null,
+  additionalData?: TAdditionalData | null,
+): Options<TEntity, TAdditionalData> {
+  if (isOptions<TEntity, TAdditionalData>(validators)) {
+    return validators;
+  }
+  if (isOptions<TEntity, TAdditionalData>(setValidValue)) {
+    return { validators, ...setValidValue };
+  }
+  if (isOptions<TEntity, TAdditionalData>(activate)) {
+    return { validators, setValidValue, ...activate };
+  }
+  return { validators, setValidValue, activate, additionalData };
+}
 
 export class FormControl<TEntity = string, TAdditionalData = any> extends FormAbstractControl {
-  private autoInstallDisposer: IReactionDisposer;
-  private reactionOnInternalValueDisposer: IReactionDisposer;
+  private reactionOnValueGetterDisposer: IReactionDisposer | undefined;
+  private reactionOnInternalValueDisposer: IReactionDisposer | undefined;
   private readonly reactionOnIsActiveDisposer: IReactionDisposer;
   private readonly reactionOnIsDirtyDisposer: IReactionDisposer;
   private readonly reactionOnIsFocusedDisposer: IReactionDisposer;
-  private validators: ValidatorFunctionFormControlHandler<TEntity>[] = [];
+  private readonly validators: ValidatorFunctionFormControlHandler<TEntity>[];
+  private readonly setValidValue: UpdateValidValueHandler<TEntity>;
+  private readonly callSetterOnInitialize: boolean;
+  private readonly callSetterOnReinitialize: boolean;
 
   public readonly type: ControlTypes = ControlTypes.Control;
+  private isInitialized: boolean = false;
 
   @observable
+  // @ts-ignore: internalValue is always initialized in this.setInitialValue() call
   private internalValue: TEntity;
 
   @computed get processing(): boolean {
@@ -67,8 +156,25 @@ export class FormControl<TEntity = string, TAdditionalData = any> extends FormAb
   }
 
   @observable
-  public additionalData: TAdditionalData;
+  public additionalData: TAdditionalData | null;
 
+  static for<M extends Object, K extends keyof M, TAdditionalData = any>(
+    /**
+     * Model object containing the editable field
+     * Объект модели, содержащий редактируемое поле
+     */
+    model: M,
+    /**
+     * Field name of the model to edit
+     * Имя редактируемого поля модели
+     */
+    fieldName: K,
+    /**
+     * Options
+     * Опции
+     */
+    modelOptions?: ModelOptions<M[K], TAdditionalData>,
+  ): FormControl<M[K], TAdditionalData>;
   static for<M extends Object, K extends keyof M, TAdditionalData = any>(
     /**
      * Model object containing the editable field
@@ -84,57 +190,125 @@ export class FormControl<TEntity = string, TAdditionalData = any> extends FormAb
      * Validations
      * Валидациии
      */
-    validators?: ValidatorFunctionFormControlHandler<M[K]>[],
+    validators: ValidatorFunctionFormControlHandler<M[K]>[],
     /**
-     * Function enable validation by condition (always enabled by default)
-     * Функция включение валидаций по условию (по умолчанию включено всегда)
+     * Options
+     * Опции
      */
-    activate?: () => boolean,
-    /**
-     * Additional information
-     * Блок с дополнительной информацией
-     */
-    additionalData?: TAdditionalData,
+    modelOptions?: ModelOptions<M[K], TAdditionalData>,
+  ): FormControl<M[K], TAdditionalData>;
+  static for<M extends Object, K extends keyof M, TAdditionalData = any>(
+    model: M,
+    fieldName: K,
+    validators?: ValidatorFunctionFormControlHandler<M[K]>[] | ModelOptions<M[K], TAdditionalData>,
+    modelOptions?: ModelOptions<M[K], TAdditionalData>,
   ): FormControl<M[K]> {
-    return new FormControl<M[K]>(model[fieldName], validators, (value: M[K]) => (model[fieldName] = value), activate, additionalData);
+    const { reflectModelChanges = true, ...options } = getOptions(
+      validators,
+      (value: M[K]) => (model[fieldName] = value),
+      modelOptions,
+    ) as ModelOptions<M[K], TAdditionalData>;
+
+    return new FormControl<M[K]>(reflectModelChanges ? () => model[fieldName] : model[fieldName], options);
   }
 
+  constructor(
+    /**
+     * Initial value or initial value getter function
+     * / Инициализирующие значение или его getter
+     */
+    valueOrGetter: TEntity | (() => TEntity),
+    /**
+     * Options
+     * / Опции
+     */
+    options: Options<TEntity, TAdditionalData>,
+  );
   constructor(
     /**
      * Initializing valueI
      * / Инициализирующие значение или его getter
      */
-    value: TEntity | (() => TEntity),
+    valueOrGetter: TEntity | (() => TEntity),
     /**
      * Validators
      * / Валидаторы
      */
-    validators: ValidatorFunctionFormControlHandler<TEntity>[] = [],
+    validators: ValidatorFunctionFormControlHandler<TEntity>[],
+    /**
+     * Options
+     * / Опции
+     */
+    options: Options<TEntity, TAdditionalData>,
+  );
+  constructor(
+    /**
+     * Initializing valueI
+     * / Инициализирующие значение или его getter
+     */
+    valueOrGetter: TEntity | (() => TEntity),
+    /**
+     * Validators
+     * / Валидаторы
+     */
+    validators: ValidatorFunctionFormControlHandler<TEntity>[],
     /**
      * Callback get last valid value
      * / Передает последние валидное значение
      */
-    private callbackValidValue: UpdateValidValueHandler<TEntity> | null = null,
+    setValidValue: UpdateValidValueHandler<TEntity>,
+    /**
+     * Options
+     * / Опции
+     */
+    options: Options<TEntity, TAdditionalData>,
+  );
+  constructor(
+    /**
+     * Initializing valueI
+     * / Инициализирующие значение или его getter
+     */
+    valueOrGetter: TEntity | (() => TEntity),
+    /**
+     * Validators
+     * / Валидаторы
+     */
+    validators?: ValidatorFunctionFormControlHandler<TEntity>[],
+    /**
+     * Callback get last valid value
+     * / Передает последние валидное значение
+     */
+    setValidValue?: UpdateValidValueHandler<TEntity> | null,
     /**
      * Function enable validation by condition (always enabled by default)
      * / Функция включение валидаций по условию (по умолчанию включено всегда)
      */
-    activate: (() => boolean) | null = null,
+    activate?: (() => boolean) | null,
     /**
      * Additional information
      * / Блок с дополнительной информацией
      */
+    additionalData?: TAdditionalData | null,
+  );
+  constructor(
+    valueOrGetter: TEntity | (() => TEntity),
+    validators: ValidatorFunctionFormControlHandler<TEntity>[] | Options<TEntity, TAdditionalData> = [],
+    onChange: UpdateValidValueHandler<TEntity> | Options<TEntity, TAdditionalData> | null = null,
+    activate: (() => boolean) | Options<TEntity, TAdditionalData> | null = null,
     additionalData: TAdditionalData | null = null,
   ) {
-    super(activate);
-    this.validators = validators;
-    this.additionalData = additionalData;
-    this.installInitValue(value);
+    super(getOptions(validators, onChange, activate, additionalData).activate);
+    const options = getOptions(validators, onChange, activate, additionalData);
+    this.validators = options.validators || [];
+    this.setValidValue = options.setValidValue || noop;
+    this.additionalData = options.additionalData || null;
+    this.callSetterOnInitialize = options.callSetterOnInitialize || false;
+    this.callSetterOnReinitialize = options.callSetterOnReinitialize || false;
 
     this.reactionOnIsActiveDisposer = reaction(
       () => this.isActive,
       () => {
-        this.checkInternalValue();
+        this.checkInternalValue(this.isInitialized || this.callSetterOnInitialize);
         this.onChange.call();
       },
     );
@@ -156,42 +330,49 @@ export class FormControl<TEntity = string, TAdditionalData = any> extends FormAb
         }
       },
     );
+
+    this.setInitialValue(valueOrGetter);
+
+    // schesule isInitialized flag change on next tick in Microtask queue
+    // to run in after all synchronous MobX reactions
+    Promise.resolve().then(() => (this.isInitialized = true));
   }
 
-  public installInitValue = (value: TEntity | (() => TEntity)) => {
-    let isGetterValue: boolean;
-    let valueGetter: () => TEntity;
+  public setInitialValue = (valueOrGetter: TEntity | (() => TEntity)) => {
+    const valueGetter = valueOrGetter instanceof Function ? valueOrGetter : () => valueOrGetter;
 
-    if (value instanceof Function) {
-      isGetterValue = true;
-      valueGetter = value;
-    } else {
-      isGetterValue = false;
-      valueGetter = () => value;
-    }
+    this.reactionOnValueGetterDisposer && this.reactionOnValueGetterDisposer();
 
-    this.autoInstallDisposer && this.autoInstallDisposer();
+    this.reactionOnValueGetterDisposer = reaction(
+      valueGetter,
+      initialValue => {
+        this.reactionOnInternalValueDisposer && this.reactionOnInternalValueDisposer();
 
-    this.autoInstallDisposer = autorun(() => {
-      this.reactionOnInternalValueDisposer && this.reactionOnInternalValueDisposer();
+        this.internalValue = initialValue;
 
-      this.internalValue = valueGetter();
+        this.reactionOnInternalValueDisposer = reaction(
+          () => this.internalValue,
+          () => {
+            this.isDirty = true;
+            this.serverErrors = [];
+            this.checkInternalValue();
+            this.onChange.call();
+          },
+        );
 
-      this.reactionOnInternalValueDisposer = reaction(
-        () => this.internalValue,
-        () => {
-          this.isDirty = true;
-          this.serverErrors = [];
-          this.checkInternalValue();
-          this.onChange.call();
-        },
-      );
+        if (this.isInitialized) {
+          this.checkInternalValue(this.callSetterOnReinitialize);
+        } else {
+          this.checkInternalValue(this.callSetterOnInitialize);
+        }
+      },
+      { fireImmediately: true },
+    );
 
-      this.checkInternalValue(!isGetterValue);
-    })
+    return this;
   };
 
-  public executeAsyncValidation = (validator: (control: FormControl<TEntity>) => Promise<ValidationEvent[]>): Promise<ValidationEvent[]> =>
+  public executeAsyncValidation = (validator: (control: this) => Promise<ValidationEvent[]>): Promise<ValidationEvent[]> =>
     this.baseExecuteAsyncValidation(validator, () => {
       this.serverErrors = [];
       this.checkInternalValue();
@@ -217,23 +398,32 @@ export class FormControl<TEntity = string, TAdditionalData = any> extends FormAb
   };
 
   @action
+  public setValue = (value: TEntity) => {
+    this.internalValue = value;
+    return this;
+  };
+
+  @action
   public setDirty = (dirty: boolean) => {
     this.isDirty = dirty;
+    return this;
   };
 
   @action
   public setTouched = (touched: boolean) => {
     this.isTouched = touched;
+    return this;
   };
 
   @action
   public setFocused = (focused: boolean) => {
     this.isFocused = focused;
+    return this;
   };
 
   public dispose = (): void => {
     this.baseDispose();
-    this.autoInstallDisposer && this.autoInstallDisposer();
+    this.reactionOnValueGetterDisposer && this.reactionOnValueGetterDisposer();
     this.reactionOnInternalValueDisposer && this.reactionOnInternalValueDisposer();
     this.reactionOnIsActiveDisposer();
     this.reactionOnIsDirtyDisposer();
@@ -241,11 +431,11 @@ export class FormControl<TEntity = string, TAdditionalData = any> extends FormAb
   };
 
   @action
-  private checkInternalValue = (emit: boolean = true) => {
+  private checkInternalValue = (shouldCallSetter: boolean = true) => {
     this.inProcessing = true;
     this.onValidation(this.validators, this.checkInternalValue, () => {
-      if (emit && this.callbackValidValue && this.errors.length === 0) {
-        this.callbackValidValue(this.internalValue);
+      if (shouldCallSetter && this.setValidValue && this.errors.length === 0) {
+        this.setValidValue(this.internalValue);
       }
       this.inProcessing = false;
     });
