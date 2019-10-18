@@ -14,6 +14,23 @@ export class FormGroup<TControls extends AbstractControls = AbstractControls> ex
 
   public controls: TControls;
 
+  static of<TControls extends AbstractControls = AbstractControls>(
+    /** controls */
+    controls: TControls,
+    /**
+     * Validators
+     * / Валидаторы
+     */
+    validators: ValidatorFunctionFormGroupHandler<TControls>[] = [],
+    /**
+     * Function enable validation by condition (always enabled by default)
+     * / Функция включение валидаций по условию (по умолчанию включено всегда)
+     */
+    activate: (() => boolean) | null = null,
+  ): FormGroup<TControls> {
+    return new FormGroup<TControls>(controls, validators, activate);
+  }
+
   constructor(
     /** controls */
     controls: TControls,
@@ -82,6 +99,7 @@ export class FormGroup<TControls extends AbstractControls = AbstractControls> ex
     for (const control of this.getControls()) {
       control.setDirty(dirty);
     }
+    return this;
   };
 
   @action
@@ -89,6 +107,7 @@ export class FormGroup<TControls extends AbstractControls = AbstractControls> ex
     for (const control of this.getControls()) {
       control.setTouched(touched);
     }
+    return this;
   };
 
   @action
@@ -132,7 +151,7 @@ export class FormGroup<TControls extends AbstractControls = AbstractControls> ex
     }
   }
 
-  public executeAsyncValidation = (validator: (control: FormGroup<TControls>) => Promise<ValidationEvent[]>): Promise<ValidationEvent[]> =>
+  public executeAsyncValidation = (validator: (control: this) => Promise<ValidationEvent[]>): Promise<ValidationEvent[]> =>
     this.baseExecuteAsyncValidation(validator, () => {
       this.serverErrors = [];
       this.checkGroupValidations();

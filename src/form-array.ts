@@ -19,15 +19,32 @@ export class FormArray<TControl extends AbstractControl> extends FormAbstractGro
 
   private readonly validators: ValidatorFunctionFormArrayHandler<TControl>[] = [];
 
-  constructor(
+  static of<TControl extends AbstractControl>(
     /** FormControls */
     controls: TControl[] = [],
-    /** 
+    /**
      * Validators
      * / Валидации
      */
     validators: ValidatorFunctionFormArrayHandler<TControl>[] = [],
-    /** 
+    /**
+     * Function enable validation by condition (always enabled by default)
+     * / Функция включение валидаций по условию (по умолчанию включено всегда)
+     */
+    activate: (() => boolean) | null = null,
+  ): FormArray<TControl> {
+    return new FormArray<TControl>(controls, validators, activate);
+  }
+
+  constructor(
+    /** FormControls */
+    controls: TControl[] = [],
+    /**
+     * Validators
+     * / Валидации
+     */
+    validators: ValidatorFunctionFormArrayHandler<TControl>[] = [],
+    /**
      * Function enable validation by condition (always enabled by default)
      * / Функция включение валидаций по условию (по умолчанию включено всегда)
      */
@@ -80,6 +97,7 @@ export class FormArray<TControl extends AbstractControl> extends FormAbstractGro
     for (const control of this.controls) {
       control.setDirty(dirty);
     }
+    return this;
   };
 
   @action
@@ -87,6 +105,7 @@ export class FormArray<TControl extends AbstractControl> extends FormAbstractGro
     for (const control of this.controls) {
       control.setTouched(touched);
     }
+    return this;
   };
 
   @action
@@ -102,7 +121,7 @@ export class FormArray<TControl extends AbstractControl> extends FormAbstractGro
     return controls;
   }
 
-  public executeAsyncValidation = (validator: (control: FormArray<TControl>) => Promise<ValidationEvent[]>): Promise<ValidationEvent[]> =>
+  public executeAsyncValidation = (validator: (control: this) => Promise<ValidationEvent[]>): Promise<ValidationEvent[]> =>
     this.baseExecuteAsyncValidation(validator, () => {
       this.serverErrors = [];
       this.checkArrayValidations();
@@ -267,7 +286,10 @@ export class FormArray<TControl extends AbstractControl> extends FormAbstractGro
    * @param callbackfn A function that accepts up to four arguments. The reduce method calls the callbackfn function one time for each element in the array.
    * @param initialValue If initialValue is specified, it is used as the initial value to start the accumulation. The first call to the callbackfn function provides this value as an argument instead of an array value.
    */
-  public reduce = <U>(callbackfn: (previousValue: U, currentValue: TControl, currentIndex: number, array: TControl[]) => U, initialValue?: U): U => {
+  public reduce = <U = TControl>(
+    callbackfn: (previousValue: U, currentValue: TControl, currentIndex: number, array: TControl[]) => U,
+    initialValue: U,
+  ): U => {
     return this.controls.reduce(callbackfn, initialValue);
   };
 
@@ -280,7 +302,7 @@ export class FormArray<TControl extends AbstractControl> extends FormAbstractGro
     callbackfn: (previousValue: U, currentValue: TControl, currentIndex: number, array: TControl[]) => U,
     initialValue: U,
   ): U => {
-    return this.controls.reduce(callbackfn, initialValue);
+    return this.controls.reduceRight(callbackfn, initialValue);
   };
 
   protected abbreviatedAND = (getData: (control: AbstractControl) => boolean) => {
