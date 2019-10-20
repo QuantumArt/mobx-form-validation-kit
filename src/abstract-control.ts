@@ -6,7 +6,6 @@ import { ValidationEventTypes } from './validation-event-types';
 import { combineErrors, noop } from './utilites';
 
 export abstract class AbstractControl {
-  private readonly reactionOnIsActiveFuncDisposer: IReactionDisposer;
   protected reactionOnValidatorDisposers: IReactionDisposer[] = [];
   /**
    * Type
@@ -20,8 +19,11 @@ export abstract class AbstractControl {
    * / В процессе анализа
    */
   abstract processing: boolean;
-  @observable
-  protected isActive: boolean;
+  private isActiveFunc: () => boolean;
+  @computed
+  protected get isActive() {
+    return this.isActiveFunc();
+  }
   /**
    * Error checking is disabled (control is always valid)
    * / Проверка ошибок отключена (контрол всегда валиден)
@@ -163,12 +165,7 @@ export abstract class AbstractControl {
     activate: (() => boolean) | null = null,
   ) {
     this.inProcessing = false;
-    const isActiveFunc = activate === null ? () => true : activate;
-    // !!! Не менять на fireImmediately !!!!
-    this.isActive = isActiveFunc();
-    this.reactionOnIsActiveFuncDisposer = reaction(isActiveFunc, (isActive: boolean) => {
-      this.isActive = isActive;
-    });
+    this.isActiveFunc = activate === null ? () => true : activate;
   }
 
   private lastValidators: ((control: any) => Promise<ValidationEvent[]>)[] = [];
@@ -228,7 +225,6 @@ export abstract class AbstractControl {
 
   protected baseDispose = (): void => {
     this.onChange.dispose();
-    this.reactionOnIsActiveFuncDisposer();
     for (const reactionOnValidator of this.reactionOnValidatorDisposers) {
       reactionOnValidator();
     }
