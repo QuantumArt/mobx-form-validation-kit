@@ -55,9 +55,6 @@ interface Options<TEntity, TAdditionalData> {
    * model.value = 456; // then we see { value: 456 } in console
    */
   callSetterOnReinitialize?: boolean;
-}
-
-interface ModelOptions<TEntity, TAdditionalData> extends Options<TEntity, TAdditionalData> {
   /**
    * Apply model field changes to FormControl value changes.
    * Применять изменения поля модели к полю формы.
@@ -71,21 +68,37 @@ function isOptions<TEntity, TAdditionalData>(arg: any): arg is Options<TEntity, 
 }
 
 function getOptions<TEntity, TAdditionalData>(
-  validators: ValidatorFunctionFormControlHandler<TEntity>[] | Options<TEntity, TAdditionalData> = [],
+  validators?: ValidatorFunctionFormControlHandler<TEntity>[] | Options<TEntity, TAdditionalData>,
   setValidValue?: UpdateValidValueHandler<TEntity> | Options<TEntity, TAdditionalData> | null,
   activate?: (() => boolean) | Options<TEntity, TAdditionalData> | null,
   additionalData?: TAdditionalData | null,
 ): Options<TEntity, TAdditionalData> {
-  if (isOptions<TEntity, TAdditionalData>(validators)) {
-    return validators;
+  const options: Options<TEntity, TAdditionalData> = {};
+  if (validators) {
+    if (isOptions<TEntity, TAdditionalData>(validators)) {
+      Object.assign(options, validators);
+    } else {
+      options.validators = validators;
+    }
   }
-  if (isOptions<TEntity, TAdditionalData>(setValidValue)) {
-    return { validators, ...setValidValue };
+  if (setValidValue) {
+    if (isOptions<TEntity, TAdditionalData>(setValidValue)) {
+      Object.assign(options, setValidValue);
+    } else {
+      options.setValidValue = setValidValue;
+    }
   }
-  if (isOptions<TEntity, TAdditionalData>(activate)) {
-    return { validators, setValidValue, ...activate };
+  if (activate) {
+    if (isOptions<TEntity, TAdditionalData>(activate)) {
+      Object.assign(options, activate);
+    } else {
+      options.activate = activate;
+    }
   }
-  return { validators, setValidValue, activate, additionalData };
+  if (additionalData !== null) {
+    options.additionalData = additionalData;
+  }
+  return options;
 }
 
 export class FormControl<TEntity = string, TAdditionalData = any> extends FormAbstractControl {
@@ -170,62 +183,22 @@ export class FormControl<TEntity = string, TAdditionalData = any> extends FormAb
      */
     fieldName: K,
     /**
-     * Options
-     * Опции
-     */
-    modelOptions?: ModelOptions<M[K], TAdditionalData>,
-  ): FormControl<M[K], TAdditionalData>;
-  static for<M extends Object, K extends keyof M, TAdditionalData = any>(
-    /**
-     * Model object containing the editable field
-     * Объект модели, содержащий редактируемое поле
-     */
-    model: M,
-    /**
-     * Field name of the model to edit
-     * Имя редактируемого поля модели
-     */
-    fieldName: K,
-    /**
      * Validations
      * Валидациии
      */
-    validators: ValidatorFunctionFormControlHandler<M[K]>[],
+    validators?: ValidatorFunctionFormControlHandler<M[K]>[] | Options<M[K], TAdditionalData>,
     /**
      * Options
      * Опции
      */
-    modelOptions?: ModelOptions<M[K], TAdditionalData>,
-  ): FormControl<M[K], TAdditionalData>;
-  static for<M extends Object, K extends keyof M, TAdditionalData = any>(
-    model: M,
-    fieldName: K,
-    validators?: ValidatorFunctionFormControlHandler<M[K]>[] | ModelOptions<M[K], TAdditionalData>,
-    modelOptions?: ModelOptions<M[K], TAdditionalData>,
-  ): FormControl<M[K]> {
-    const { reflectModelChanges = true, ...options } = getOptions(
-      validators,
-      (value: M[K]) => (model[fieldName] = value),
-      modelOptions,
-    ) as ModelOptions<M[K], TAdditionalData>;
-
-    return new FormControl<M[K]>(reflectModelChanges ? () => model[fieldName] : model[fieldName], options);
+    modelOptions?: Options<M[K], TAdditionalData>,
+  ): FormControl<M[K], TAdditionalData> {
+    const { reflectModelChanges = true } = getOptions(validators, (value: M[K]) => (model[fieldName] = value), modelOptions);
+    return new FormControl<M[K], TAdditionalData>(reflectModelChanges ? () => model[fieldName] : model[fieldName], modelOptions);
   }
 
   constructor(
     /**
-     * Initial value or initial value getter function
-     * / Инициализирующие значение или его getter
-     */
-    valueOrGetter: TEntity | (() => TEntity),
-    /**
-     * Options
-     * / Опции
-     */
-    options: Options<TEntity, TAdditionalData>,
-  );
-  constructor(
-    /**
      * Initializing valueI
      * / Инициализирующие значение или его getter
      */
@@ -234,75 +207,29 @@ export class FormControl<TEntity = string, TAdditionalData = any> extends FormAb
      * Validators
      * / Валидаторы
      */
-    validators: ValidatorFunctionFormControlHandler<TEntity>[],
-    /**
-     * Options
-     * / Опции
-     */
-    options: Options<TEntity, TAdditionalData>,
-  );
-  constructor(
-    /**
-     * Initializing valueI
-     * / Инициализирующие значение или его getter
-     */
-    valueOrGetter: TEntity | (() => TEntity),
-    /**
-     * Validators
-     * / Валидаторы
-     */
-    validators: ValidatorFunctionFormControlHandler<TEntity>[],
+    validators: ValidatorFunctionFormControlHandler<TEntity>[] | Options<TEntity, TAdditionalData> = [],
     /**
      * Callback get last valid value
      * / Передает последние валидное значение
      */
-    setValidValue: UpdateValidValueHandler<TEntity>,
-    /**
-     * Options
-     * / Опции
-     */
-    options: Options<TEntity, TAdditionalData>,
-  );
-  constructor(
-    /**
-     * Initializing valueI
-     * / Инициализирующие значение или его getter
-     */
-    valueOrGetter: TEntity | (() => TEntity),
-    /**
-     * Validators
-     * / Валидаторы
-     */
-    validators?: ValidatorFunctionFormControlHandler<TEntity>[],
-    /**
-     * Callback get last valid value
-     * / Передает последние валидное значение
-     */
-    setValidValue?: UpdateValidValueHandler<TEntity> | null,
+    setValidValue: UpdateValidValueHandler<TEntity> | Options<TEntity, TAdditionalData> | null = null,
     /**
      * Function enable validation by condition (always enabled by default)
      * / Функция включение валидаций по условию (по умолчанию включено всегда)
      */
-    activate?: (() => boolean) | null,
+    activate: (() => boolean) | Options<TEntity, TAdditionalData> | null = null,
     /**
      * Additional information
      * / Блок с дополнительной информацией
      */
-    additionalData?: TAdditionalData | null,
-  );
-  constructor(
-    valueOrGetter: TEntity | (() => TEntity),
-    validators: ValidatorFunctionFormControlHandler<TEntity>[] | Options<TEntity, TAdditionalData> = [],
-    onChange: UpdateValidValueHandler<TEntity> | Options<TEntity, TAdditionalData> | null = null,
-    activate: (() => boolean) | Options<TEntity, TAdditionalData> | null = null,
     additionalData: TAdditionalData | null = null,
   ) {
-    super(getOptions(validators, onChange, activate, additionalData).activate);
-    const options = getOptions(validators, onChange, activate, additionalData);
+    super(getOptions(validators, setValidValue, activate, additionalData).activate);
+    const options = getOptions(validators, setValidValue, activate, additionalData);
     this.validators = options.validators || [];
     this.setValidValue = options.setValidValue || noop;
     this.additionalData = options.additionalData || null;
-    this.callSetterOnInitialize = options.callSetterOnInitialize || false;
+    this.callSetterOnInitialize = this.getCallSetterOnInitialize(options);
     this.callSetterOnReinitialize = options.callSetterOnReinitialize || false;
 
     this.reactionOnIsActiveDisposer = reaction(
@@ -333,9 +260,13 @@ export class FormControl<TEntity = string, TAdditionalData = any> extends FormAb
 
     this.setInitialValue(valueOrGetter);
 
-    // schesule isInitialized flag change on next tick in Microtask queue
+    // schedule isInitialized flag change on next tick in Microtask queue
     // to run in after all synchronous MobX reactions
     Promise.resolve().then(() => (this.isInitialized = true));
+  }
+
+  protected getCallSetterOnInitialize({ callSetterOnInitialize }: Options<TEntity, TAdditionalData>) {
+    return callSetterOnInitialize || false;
   }
 
   public setInitialValue = (valueOrGetter: TEntity | (() => TEntity)) => {
@@ -440,4 +371,10 @@ export class FormControl<TEntity = string, TAdditionalData = any> extends FormAb
       this.inProcessing = false;
     });
   };
+}
+
+export class FormControlLegacy<TEntity = string, TAdditionalData = any> extends FormControl<TEntity, TAdditionalData> {
+  protected getCallSetterOnInitialize({ callSetterOnInitialize }: Options<TEntity, TAdditionalData>) {
+    return callSetterOnInitialize === null || callSetterOnInitialize === undefined ? true : callSetterOnInitialize;
+  }
 }

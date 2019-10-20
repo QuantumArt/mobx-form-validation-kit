@@ -1,4 +1,4 @@
-import { FormControl, FormGroup, required, AbstractControls } from '.';
+import { FormControl, FormGroup, required, AbstractControls } from './next';
 import { observable } from 'mobx';
 
 describe('FormControl', () => {
