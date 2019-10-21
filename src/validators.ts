@@ -1,4 +1,9 @@
-import { FormControl, ValidationEvent, ValidationEventTypes, ValidatorFunctionFormControlHandler, combineErrors, AbstractControl } from './index';
+import { combineErrors } from './utilites';
+import { AbstractControl } from './abstract-control';
+import { FormControl } from './form-control';
+import { ValidatorFunctionFormControlHandler } from './events';
+import { ValidationEventTypes } from './validation-event-types';
+import { ValidationEvent } from './validation-event';
 
 export const requiredValidator = 'required';
 export const required = <TEntity>(message: string = 'Поле обязательно', eventType = ValidationEventTypes.Error) => {

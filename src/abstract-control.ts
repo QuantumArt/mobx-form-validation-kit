@@ -3,10 +3,9 @@ import { Delegate } from './delegate';
 import { ControlTypes } from './сontrol-types';
 import { ValidationEvent } from './validation-event';
 import { ValidationEventTypes } from './validation-event-types';
-import { combineErrors } from './utilites';
+import { combineErrors, noop } from './utilites';
 
 export abstract class AbstractControl {
-  private readonly reactionOnIsActiveFuncDisposer: IReactionDisposer;
   protected reactionOnValidatorDisposers: IReactionDisposer[] = [];
   /**
    * Type
@@ -20,8 +19,11 @@ export abstract class AbstractControl {
    * / В процессе анализа
    */
   abstract processing: boolean;
-  @observable
-  protected isActive: boolean;
+  private isActiveFunc: () => boolean;
+  @computed
+  protected get isActive() {
+    return this.isActiveFunc();
+  }
   /**
    * Error checking is disabled (control is always valid)
    * / Проверка ошибок отключена (контрол всегда валиден)
@@ -85,7 +87,7 @@ export abstract class AbstractControl {
    * / Сообщения "Внимание"
    */
   @observable.ref
-  public warnings: ValidationEvent[];
+  public warnings: ValidationEvent[] = [];
   public hasWarnings() {
     return !!this.warnings && this.warnings.length > 0;
   }
@@ -94,7 +96,7 @@ export abstract class AbstractControl {
    * / Сообщения "Информационные сообщения"
    */
   @observable.ref
-  public informationMessages: ValidationEvent[];
+  public informationMessages: ValidationEvent[] = [];
   public hasInformationMessages() {
     return !!this.informationMessages && this.informationMessages.length > 0;
   }
@@ -103,7 +105,7 @@ export abstract class AbstractControl {
    * / Сообщения об удовлетворении необязательных условий валидации
    */
   @observable.ref
-  public successes: ValidationEvent[];
+  public successes: ValidationEvent[] = [];
   public hasSuccesses() {
     return !!this.successes && this.successes.length > 0;
   }
@@ -143,12 +145,12 @@ export abstract class AbstractControl {
    * Set marker "value changed"
    * / Устанавливает значение измения данных
    */
-  abstract setDirty(dirty: boolean): void;
+  abstract setDirty(dirty: boolean): this;
   /**
    * Set marker "field was out of focus"
    * / Устанавливает значение фокуса
    */
-  abstract setTouched(touched: boolean): void;
+  abstract setTouched(touched: boolean): this;
   /**
    * Dispose (call in unmount react control)
    * / Вызвать при удалении контрола
@@ -163,16 +165,11 @@ export abstract class AbstractControl {
     activate: (() => boolean) | null = null,
   ) {
     this.inProcessing = false;
-    const isActiveFunc = activate === null ? () => true : activate;
-    // !!! Не менять на fireImmediately !!!!
-    this.isActive = isActiveFunc();
-    this.reactionOnIsActiveFuncDisposer = reaction(isActiveFunc, (isActive: boolean) => {
-      this.isActive = isActive;
-    });
+    this.isActiveFunc = activate === null ? () => true : activate;
   }
 
-  private lastValidators: ((control: any) => Promise<ValidationEvent[]>)[];
-  private lastValidationFunction: () => void;
+  private lastValidators: ((control: any) => Promise<ValidationEvent[]>)[] = [];
+  private lastValidationFunction: () => void = noop;
   @action
   protected onValidation = async (
     validators: ((control: any) => Promise<ValidationEvent[]>)[],
@@ -228,16 +225,15 @@ export abstract class AbstractControl {
 
   protected baseDispose = (): void => {
     this.onChange.dispose();
-    this.reactionOnIsActiveFuncDisposer();
     for (const reactionOnValidator of this.reactionOnValidatorDisposers) {
       reactionOnValidator();
     }
   };
 
-  public abstract executeAsyncValidation(validator: (control: AbstractControl) => Promise<ValidationEvent[]>): Promise<ValidationEvent[]>;
+  public abstract executeAsyncValidation(validator: (control: this) => Promise<ValidationEvent[]>): Promise<ValidationEvent[]>;
 
   protected baseExecuteAsyncValidation = (
-    validator: (control: AbstractControl) => Promise<ValidationEvent[]>,
+    validator: (control: this) => Promise<ValidationEvent[]>,
     onValidationFunction: () => void,
   ): Promise<ValidationEvent[]> => {
     let isFirstReaction = true;
