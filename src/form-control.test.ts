@@ -1,4 +1,4 @@
-import { FormControl, FormGroup, required, AbstractControls } from './next';
+import { FormControl, FormGroup, required, AbstractControls } from '.';
 import { observable } from 'mobx';
 
 describe('FormControl', () => {
@@ -6,7 +6,7 @@ describe('FormControl', () => {
     const setter = jest.fn<void, [string]>();
 
     const form = new FormGroup({
-      field: new FormControl<string>('test', [required()], setter),
+      field: new FormControl<string>('test', [required()], setter, { callSetterOnInitialize: false }),
     });
     await form.wait();
 
@@ -17,7 +17,7 @@ describe('FormControl', () => {
     const setter = jest.fn<void, [string]>();
 
     const form = new FormGroup({
-      field: new FormControl<string>('test', [required()], setter),
+      field: new FormControl<string>('test', [required()], setter, { callSetterOnInitialize: false }),
     });
     await form.wait();
 
@@ -62,7 +62,7 @@ describe('FormControl', () => {
     expect(setter).not.toBeCalled();
   });
 
-  it('should not call setter when activated during initialization by default', async () => {
+  it('should not call setter when activated during initialization', async () => {
     const primarySetter = jest.fn<void, [string]>();
     const dependentSetter = jest.fn<void, [string]>();
 
@@ -73,9 +73,10 @@ describe('FormControl', () => {
 
     class Component {
       @observable form: FormGroup<IForm> = new FormGroup({
-        primaryField: new FormControl<string>('foo', [required()], primarySetter),
+        primaryField: new FormControl<string>('foo', [required()], primarySetter, { callSetterOnInitialize: false }),
         dependentField: new FormControl<string>('bar', [required()], dependentSetter, {
           activate: () => this.form && this.form.controls.primaryField.value === 'foo',
+          callSetterOnInitialize: false,
         }),
       });
     }
@@ -99,9 +100,10 @@ describe('FormControl', () => {
 
     class Component {
       @observable form: FormGroup<IForm> = new FormGroup({
-        primaryField: new FormControl<number>(123, [required()], primarySetter),
+        primaryField: new FormControl<number>(123, [required()], primarySetter, { callSetterOnInitialize: false }),
         dependentField: new FormControl<string>('bar', [required()], dependentSetter, {
           activate: () => this.form && this.form.controls.primaryField.value === 456,
+          callSetterOnInitialize: false,
         }),
       });
     }

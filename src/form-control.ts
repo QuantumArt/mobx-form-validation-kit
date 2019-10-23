@@ -29,7 +29,7 @@ interface Options<TEntity, TAdditionalData> {
   /**
    * Invoke `setValidValue` when `FormControl` is created.
    * Вызвать `setValidValue` при создании `FormControl`.
-   * @default false
+   * @default false if `valueOrGetter` is function and `true` otherwise
    * @example
    * const model = observable({ value: 123 });
    * new FormControl(
@@ -229,8 +229,8 @@ export class FormControl<TEntity = string, TAdditionalData = any> extends FormAb
     this.validators = options.validators || [];
     this.setValidValue = options.setValidValue || noop;
     this.additionalData = options.additionalData || null;
-    this.callSetterOnInitialize = this.getCallSetterOnInitialize(options);
-    this.callSetterOnReinitialize = options.callSetterOnReinitialize || false;
+    this.callSetterOnInitialize = options.callSetterOnInitialize == null ? typeof valueOrGetter !== 'function' : options.callSetterOnInitialize;
+    this.callSetterOnReinitialize = options.callSetterOnReinitialize == null ? false : options.callSetterOnReinitialize;
 
     this.reactionOnIsActiveDisposer = reaction(
       () => this.isActive,
@@ -263,10 +263,6 @@ export class FormControl<TEntity = string, TAdditionalData = any> extends FormAb
     // schedule isInitialized flag change on next tick in Microtask queue
     // to run in after all synchronous MobX reactions
     Promise.resolve().then(() => (this.isInitialized = true));
-  }
-
-  protected getCallSetterOnInitialize({ callSetterOnInitialize }: Options<TEntity, TAdditionalData>) {
-    return callSetterOnInitialize || false;
   }
 
   public setInitialValue = (valueOrGetter: TEntity | (() => TEntity)) => {
@@ -371,10 +367,4 @@ export class FormControl<TEntity = string, TAdditionalData = any> extends FormAb
       this.inProcessing = false;
     });
   };
-}
-
-export class FormControlLegacy<TEntity = string, TAdditionalData = any> extends FormControl<TEntity, TAdditionalData> {
-  protected getCallSetterOnInitialize({ callSetterOnInitialize }: Options<TEntity, TAdditionalData>) {
-    return callSetterOnInitialize === null || callSetterOnInitialize === undefined ? true : callSetterOnInitialize;
-  }
 }

@@ -6,7 +6,7 @@ export * from './utilites';
 export * from './events';
 export * from './abstract-control';
 export * from './form-abstract-control';
-export { FormControlLegacy as FormControl } from './form-control';
+export * from './form-control';
 export * from './form-abstract-group';
 export * from './form-group';
 export * from './form-array';
