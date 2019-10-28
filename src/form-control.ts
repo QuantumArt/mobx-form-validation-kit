@@ -113,7 +113,11 @@ export class FormControl<TEntity = string, TAdditionalData = any> extends FormAb
   private readonly callSetterOnReinitialize: boolean;
 
   public readonly type: ControlTypes = ControlTypes.Control;
-  private isInitialized: boolean = false;
+  private isInitializedValue: boolean = false;
+  private isInitializedActived: boolean = false;
+  private get isInitialized(): boolean {
+    return this.isInitializedValue && this.isInitializedActived;
+  }
 
   @observable
   // @ts-ignore: internalValue is always initialized in this.setInitialValue() call
@@ -236,6 +240,7 @@ export class FormControl<TEntity = string, TAdditionalData = any> extends FormAb
       () => this.isActive,
       () => {
         this.checkInternalValue(this.isInitialized || this.callSetterOnInitialize);
+        this.isInitializedActived = true;
         this.onChange.call();
       },
     );
@@ -259,10 +264,6 @@ export class FormControl<TEntity = string, TAdditionalData = any> extends FormAb
     );
 
     this.setInitialValue(valueOrGetter);
-
-    // schedule isInitialized flag change on next tick in Microtask queue
-    // to run in after all synchronous MobX reactions
-    Promise.resolve().then(() => (this.isInitialized = true));
   }
 
   public setInitialValue = (valueOrGetter: TEntity | (() => TEntity)) => {
@@ -274,9 +275,7 @@ export class FormControl<TEntity = string, TAdditionalData = any> extends FormAb
       valueGetter,
       initialValue => {
         this.reactionOnInternalValueDisposer && this.reactionOnInternalValueDisposer();
-
         this.internalValue = initialValue;
-
         this.reactionOnInternalValueDisposer = reaction(
           () => this.internalValue,
           () => {
@@ -292,6 +291,7 @@ export class FormControl<TEntity = string, TAdditionalData = any> extends FormAb
         } else {
           this.checkInternalValue(this.callSetterOnInitialize);
         }
+        this.isInitializedValue = true;
       },
       { fireImmediately: true },
     );
