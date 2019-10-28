@@ -74,6 +74,10 @@ export class FormArray<TControl extends AbstractControl> extends FormAbstractGro
     this.checkArrayValidations();
   }
 
+  public get(index: number): TControl {
+    return this.controls[index];
+  }
+
   public dispose = (): void => {
     this.baseDispose();
     this.reactionOnIsActiveDisposer();
