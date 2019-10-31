@@ -482,8 +482,7 @@ The package has been developed by [Quantum Art] (http://www.quantumart.ru), one 
   - [Плюсы пакета](#pluses_rus)
   - [Установка](#install_rus)
   - [FormControl](#formcontrol_rus)
-  - [Валидации](#
-  _rus)
+  - [Валидации](#validation_rus)
   - [Extensions](#extensions_rus)
   - [Пример](#example_rus)
   - [Об авторе](#about_rus)
