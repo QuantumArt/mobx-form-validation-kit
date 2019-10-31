@@ -176,7 +176,7 @@ await this.form.wait();
 ...
 ```
 
-### Validationsa<a name="validation">
+### Validation <a name="validation">
 Of course, in addition to controls that allow working with data, we will need validations themselves. The package `@quantumart/mobx-form-validation-kit` typically contains a number of preset validations, as well as supports the creation of own custom validations.
 Example of setting validations for `FormControl` for the age field.
 ```sh
@@ -216,7 +216,7 @@ The package contains the following set of validations:
 | `isEqual`(value: string ... | simple string match validation. |
 
 The following describes the wrapper functions that serve to control the flow of validation launch.
-It should be noted that the validation set transferred to `FormControl,`` FormGroup,` `FormArray` is launched in a single array and actually has no execution sequence. As a result of the work, in the errors, warnings, informationMessages, and successes fields, we will obtain arrays consisting of errors, warnings, etc., which are combined into a single array.
+It should be noted that the validation set transferred to `FormControl`, `FormGroup`, `FormArray` is launched in a single array and actually has no execution sequence. As a result of the work, in the errors, warnings, informationMessages, and successes fields, we will obtain arrays consisting of errors, warnings, etc., which are combined into a single array.
 Often a customer wants to see only one error, but not all at once. Moreover, the ToR may be designed so that one validation is being performed only after the previous one has ended.
 To solve this problem, the wrapperSequentialCheck wrapper is used. Its call and its application is no different from the usual validator function, but at the input, it receives an array of validators that will be launched sequentially, i.e., the next validation will be launched only after the previous one has ended without errors.
 The second wrapper function is the control function of the flow of validations. As the first parameter, `wrapperActivateValidation` takes a function, in which it is required to specify the conditions for activation of validations. Unlike the "activate" function, which is transferred to FormControl, this validation is designed for more complex logic. Let us suppose that we have a common builder for the entire `FormGroup` form of payments, and moreover, there is only one method on the server that accepts a common set of fields. But the catch is that even though the form is common, we show a different set of fields to the user depending on the "type of payment." Thus, `wrapperActivateValidation` allows writing a logic, in which various validations will be performed depending on the type of payment.
@@ -474,7 +474,7 @@ The package has been developed by [Quantum Art] (http://www.quantumart.ru), one 
 
 - Vitaly Alferov, leading developer of the package.
 - Dmitry Paniushkin, improvement and expansion of functionality.
-- Ilya Stukalov, editor.
+- Ilia Stukalov, editor.
 
 ### Документация<a name="doc_rus">
 
@@ -649,7 +649,7 @@ await this.form.wait();
 ...
 ```
 
-### Валидацииa<a name="validation_rus">
+### Валидации <a name="validation_rus">
 Конечно, кроме контролов, которые позволяют работать с данными, нам потребуется сами валидации. Пакет `@quantumart/mobx-form-validation-kit` естественно содержит ряд предустановленных валидаций, а также поддерживает создание собственный кастомных валидаций.
 Пример задания валидаций для `FormControl` для поля с указанием возраста.
 ```sh
