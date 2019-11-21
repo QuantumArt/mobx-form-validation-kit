@@ -10,4 +10,4 @@ export type ValidatorFunctionFormControlHandler<TEntity> = (control: FormControl
 export type ValidatorFunctionFormGroupHandler<TAbstractControls extends AbstractControls> = (
   control: FormGroup<TAbstractControls>,
 ) => Promise<ValidationEvent[]>;
-export type ValidatorFunctionFormArrayHandler<TAbstractControl extends AbstractControl> = (control: TAbstractControl[]) => Promise<ValidationEvent[]>;
+export type ValidatorFunctionFormArrayHandler<TAbstractControls extends AbstractControl[]> = (control: TAbstractControls) => Promise<ValidationEvent[]>;

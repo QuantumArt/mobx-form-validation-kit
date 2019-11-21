@@ -17,7 +17,7 @@ export class FormArray<TControl extends AbstractControl> extends FormAbstractGro
     return this.controls.length;
   }
 
-  private readonly validators: ValidatorFunctionFormArrayHandler<TControl>[] = [];
+  private readonly validators: ValidatorFunctionFormArrayHandler<TControl[]>[] = [];
 
   static of<TControl extends AbstractControl>(
     /** FormControls */
@@ -26,7 +26,7 @@ export class FormArray<TControl extends AbstractControl> extends FormAbstractGro
      * Validators
      * / Валидации
      */
-    validators: ValidatorFunctionFormArrayHandler<TControl>[] = [],
+    validators: ValidatorFunctionFormArrayHandler<TControl[]>[] = [],
     /**
      * Function enable validation by condition (always enabled by default)
      * / Функция включение валидаций по условию (по умолчанию включено всегда)
@@ -43,7 +43,7 @@ export class FormArray<TControl extends AbstractControl> extends FormAbstractGro
      * Validators
      * / Валидации
      */
-    validators: ValidatorFunctionFormArrayHandler<TControl>[] = [],
+    validators: ValidatorFunctionFormArrayHandler<TControl[]>[] = [],
     /**
      * Function enable validation by condition (always enabled by default)
      * / Функция включение валидаций по условию (по умолчанию включено всегда)

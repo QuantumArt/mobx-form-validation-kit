@@ -1,5 +1,7 @@
-import { FormControl, FormGroup, required, AbstractControls } from '.';
+import { FormControl, FormGroup, required, AbstractControls, ValidationEvent } from '.';
 import { observable } from 'mobx';
+import { FormArray } from './form-array';
+import { ValidationEventTypes } from './validation-event-types';
 
 describe('FormControl', () => {
   it('should not call setter when initialized by default', async () => {
@@ -118,5 +120,31 @@ describe('FormControl', () => {
     expect(primarySetter).toBeCalledWith(456);
     expect(dependentSetter).toBeCalledTimes(1);
     expect(dependentSetter).toBeCalledWith('bar');
+  });
+
+  it('test array', async () => {
+    const form = new FormArray(
+      [new FormControl<string>('', []), new FormControl<string>('', [])],
+      [
+        async (array: FormControl<string>[]): Promise<ValidationEvent[]> => {
+          if (array.some(i => !!i.value)) {
+            return [
+              {
+                message: '',
+                type: ValidationEventTypes.Error,
+              },
+            ];
+          }
+          return [];
+        },
+      ],
+    );
+    await form.wait();
+    expect(form.valid).toBe(true);
+
+    form.get(1).value = 'test';
+    await form.wait();
+
+    expect(form.valid).toBe(false);
   });
 });
