@@ -3,7 +3,7 @@ import * as React from 'react';
 
 export class InputFormControl {
   public static bindActions(
-    formControl: FormControl<string | Date>,
+    formControl: FormControl,
     events?: {
       ref?(element: HTMLInputElement): void;
       onChange?(event: React.ChangeEvent<HTMLInputElement>): void;
@@ -43,7 +43,7 @@ export class InputFormControl {
 
 export class TextAreaFormControl {
   public static bindActions(
-    formControl: FormControl<string | Date>,
+    formControl: FormControl,
     events?: {
       ref?(element: HTMLTextAreaElement): void;
       onChange?(event: React.ChangeEvent<HTMLTextAreaElement>): void;
