@@ -102,7 +102,7 @@ describe('FormControl', () => {
 
     class Component {
       @observable form: FormGroup<IForm> = new FormGroup({
-        primaryField: new FormControl<number>(123, [required()], primarySetter, { callSetterOnInitialize: false }),
+        primaryField: new FormControl<number>(123, [required() as any], primarySetter, { callSetterOnInitialize: false }),
         dependentField: new FormControl<string>('bar', [required()], dependentSetter, {
           activate: () => this.form && this.form.controls.primaryField.value === 456,
           callSetterOnInitialize: false,

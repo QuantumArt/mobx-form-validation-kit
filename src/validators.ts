@@ -6,8 +6,8 @@ import { ValidationEventTypes } from './validation-event-types';
 import { ValidationEvent } from './validation-event';
 
 export const requiredValidator = 'required';
-export const required = <TEntity>(message: string = 'Поле обязательно', eventType = ValidationEventTypes.Error) => {
-  return async (control: FormControl<TEntity>): Promise<ValidationEvent[]> => {
+export const required = (message: string = 'Поле обязательно', eventType = ValidationEventTypes.Error) => {
+  return async (control: FormControl<string> | FormControl<string | null>): Promise<ValidationEvent[]> => {
     if (control.value == null || ((control.value as any) as string) === '') {
       return [
         {
@@ -23,7 +23,7 @@ export const required = <TEntity>(message: string = 'Поле обязатель
 
 export const notEmptyOrSpacesValidator = 'notEmptyOrSpaces';
 export const notEmptyOrSpaces = (message: string = 'Отсутствует значение', eventType = ValidationEventTypes.Error) => {
-  return async (control: FormControl): Promise<ValidationEvent[]> => {
+  return async (control: FormControl<string> | FormControl<string | null>): Promise<ValidationEvent[]> => {
     if (control.value != null && control.value.trim() !== '') {
       return [];
     }
