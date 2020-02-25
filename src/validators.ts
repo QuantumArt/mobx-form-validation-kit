@@ -43,8 +43,8 @@ export const patternValidator = 'pattern';
  * / Ошибка, если нет соответствия паттерну
  */
 export const pattern = (regExp: RegExp, message: string = 'Присутствуют недопустимые символы', eventType = ValidationEventTypes.Error) => {
-  return async (control: FormControl): Promise<ValidationEvent[]> => {
-    if (regExp.test(control.value)) {
+  return async (control: FormControl<string> | FormControl<string | null>): Promise<ValidationEvent[]> => {
+    if (control.value != null && regExp.test(control.value)) {
       return [];
     }
     return [
@@ -62,8 +62,8 @@ export const pattern = (regExp: RegExp, message: string = 'Присутству�
  * / Ошибка, если есть соответствие паттерну
  */
 export const invertPattern = (regExp: RegExp, message: string = 'Присутствуют недопустимые символы', eventType = ValidationEventTypes.Error) => {
-  return async (control: FormControl): Promise<ValidationEvent[]> => {
-    if (regExp.test(control.value)) {
+  return async (control: FormControl<string> | FormControl<string | null>): Promise<ValidationEvent[]> => {
+    if (control.value != null && regExp.test(control.value)) {
       return [
         {
           message,
