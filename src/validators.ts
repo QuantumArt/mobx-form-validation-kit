@@ -259,12 +259,12 @@ export const isEqual = <TEntity>(value: TEntity, message: string = 'Поля н�
  * / Запускает валидации только если условие активации выполнено
  */
 export const wrapperActivateValidation = <TAbstractControl extends AbstractControl>(
-  activate: () => boolean,
+  activate: (control: TAbstractControl) => boolean,
   validators: ((control: TAbstractControl) => Promise<ValidationEvent[]>)[],
   elseValidators: ((control: TAbstractControl) => Promise<ValidationEvent[]>)[] = [],
 ) => {
   return async (control: TAbstractControl): Promise<ValidationEvent[]> => {
-    if (activate()) {
+    if (activate(control)) {
       const validations = await Promise.all(validators.map(validator => control.executeAsyncValidation(validator)));
       return combineErrors(validations);
     }
