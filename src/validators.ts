@@ -125,21 +125,26 @@ export const absoluteLength = (length: number, message: string = `Длина о�
 };
 
 export const minValueValidator = 'minValue';
-export const minValue = <TEntity extends number | Date | string>(
+export const minValue = <TEntity extends number | Date>(
   min: TEntity | (() => TEntity),
-  message: string = 'Дата слишком маленькая',
+  message: string = 'Значение слишком маленькое',
   eventType = ValidationEventTypes.Error,
 ) => {
   const getMin: () => TEntity = typeof min === 'function' ? min : () => min;
-  return async (control: FormControl<TEntity>): Promise<ValidationEvent[]> => {
+  return async (control: FormControl<TEntity | string>): Promise<ValidationEvent[]> => {
     if (control.value == null) {
       return [];
     }
-    let minValue: number | Date | string = getMin();
-    if (typeof minValue === 'string') {
-      minValue = +(minValue as String);
+    const minValue = getMin();
+    let value: any = control.value;
+    if (typeof value === 'string') {
+      if (typeof minValue === 'number') {
+        value = +value;
+      } else if (minValue instanceof Date) {
+        value = new Date(value);
+      }
     }
-    if (control.value < minValue) {
+    if (value < minValue) {
       return [
         {
           message,
@@ -153,21 +158,26 @@ export const minValue = <TEntity extends number | Date | string>(
 };
 
 export const maxValueValidator = 'minValue';
-export const maxValue = <TEntity extends number | Date | string>(
+export const maxValue = <TEntity extends number | Date>(
   max: TEntity | (() => TEntity),
-  message: string = 'Дата слишком большая',
+  message: string = 'Значение слишком большое',
   eventType = ValidationEventTypes.Error,
 ) => {
   const getMax: () => TEntity = typeof max === 'function' ? max : () => max;
-  return async (control: FormControl<TEntity>): Promise<ValidationEvent[]> => {
+  return async (control: FormControl<TEntity | string>): Promise<ValidationEvent[]> => {
     if (control.value == null) {
       return [];
     }
-    let maxValue: number | Date | string = getMax();
-    if (typeof maxValue === 'string') {
-      maxValue = +(maxValue as String);
+    const maxValue = getMax();
+    let value: any = control.value;
+    if (typeof value === 'string') {
+      if (typeof maxValue === 'number') {
+        value = +value;
+      } else if (maxValue instanceof Date) {
+        value = new Date(value);
+      }
     }
-    if (maxValue < control.value) {
+    if (maxValue < value) {
       return [
         {
           message,
