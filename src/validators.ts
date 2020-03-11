@@ -6,8 +6,8 @@ import { ValidationEventTypes } from './validation-event-types';
 import { ValidationEvent } from './validation-event';
 
 export const requiredValidator = 'required';
-export const required = (message: string = 'Поле обязательно', eventType = ValidationEventTypes.Error) => {
-  return async (control: FormControl<string> | FormControl<string | null>): Promise<ValidationEvent[]> => {
+export const required = <TEntity>(message: string = 'Поле обязательно', eventType = ValidationEventTypes.Error) => {
+  return async (control: FormControl<TEntity>): Promise<ValidationEvent[]> => {
     if (control.value == null || ((control.value as any) as string) === '') {
       return [
         {
@@ -125,7 +125,7 @@ export const absoluteLength = (length: number, message: string = `Длина о�
 };
 
 export const minValueValidator = 'minValue';
-export const minValue = <TEntity extends number | Date>(
+export const minValue = <TEntity extends number | Date | string>(
   min: TEntity | (() => TEntity),
   message: string = 'Дата слишком маленькая',
   eventType = ValidationEventTypes.Error,
@@ -135,7 +135,11 @@ export const minValue = <TEntity extends number | Date>(
     if (control.value == null) {
       return [];
     }
-    if (control.value < getMin()) {
+    let minValue: number | Date | string = getMin();
+    if (typeof minValue === 'string') {
+      minValue = +(minValue as String);
+    }
+    if (control.value < minValue) {
       return [
         {
           message,
@@ -149,7 +153,7 @@ export const minValue = <TEntity extends number | Date>(
 };
 
 export const maxValueValidator = 'minValue';
-export const maxValue = <TEntity extends number | Date>(
+export const maxValue = <TEntity extends number | Date | string>(
   max: TEntity | (() => TEntity),
   message: string = 'Дата слишком большая',
   eventType = ValidationEventTypes.Error,
@@ -159,7 +163,11 @@ export const maxValue = <TEntity extends number | Date>(
     if (control.value == null) {
       return [];
     }
-    if (getMax() < control.value) {
+    let maxValue: number | Date | string = getMax();
+    if (typeof maxValue === 'string') {
+      maxValue = +(maxValue as String);
+    }
+    if (maxValue < control.value) {
       return [
         {
           message,
@@ -221,8 +229,8 @@ export const isEqualValidator = 'isEqual';
  * Equals to {value}
  * / Равно значению {value}
  */
-export const isEqual = (value: string, message: string = 'Поля не совпадают', eventType = ValidationEventTypes.Error) => {
-  return async (control: FormControl): Promise<ValidationEvent[]> => {
+export const isEqual = <TEntity>(value: TEntity, message: string = 'Поля не совпадают', eventType = ValidationEventTypes.Error) => {
+  return async (control: FormControl<TEntity>): Promise<ValidationEvent[]> => {
     if (control.value == null || control.value !== value) {
       return [];
     }
