@@ -1,14 +1,18 @@
-import { FormControl, FormGroup, required, AbstractControls, ValidationEvent } from '.';
+import { FormControl, FormGroup, required, ValidationEvent, wrapperActivateValidation, wrapperSequentialCheck } from '.';
 import { observable } from 'mobx';
 import { FormArray } from './form-array';
 import { ValidationEventTypes } from './validation-event-types';
+import { GroupControls } from './events';
 
 describe('FormControl', () => {
   it('should not call setter when initialized by default', async () => {
     const setter = jest.fn<void, [string]>();
 
     const form = new FormGroup({
-      field: new FormControl<string>('test', [required()], setter, { callSetterOnInitialize: false }),
+      field: new FormControl<string>('test', [required()], {
+        onSelectValidValue: setter,
+        callSelectValidValueOnInitialize: false,
+      }),
     });
     await form.wait();
 
@@ -19,7 +23,10 @@ describe('FormControl', () => {
     const setter = jest.fn<void, [string]>();
 
     const form = new FormGroup({
-      field: new FormControl<string>('test', [required()], setter, { callSetterOnInitialize: false }),
+      field: new FormControl<string>('test', [required()], {
+        onSelectValidValue: setter,
+        callSelectValidValueOnInitialize: false,
+      }),
     });
     await form.wait();
 
@@ -36,7 +43,9 @@ describe('FormControl', () => {
     const setter = jest.fn<void, [string]>();
 
     const form = new FormGroup({
-      field: new FormControl<string>(() => model.field, [required()], setter),
+      field: new FormControl<string>(() => model.field, [required()], {
+        onSelectValidValue: setter,
+      }),
     });
     await form.wait();
 
@@ -54,7 +63,9 @@ describe('FormControl', () => {
     const setter = jest.fn<void, [string]>();
 
     const form = new FormGroup({
-      field: new FormControl<string>(() => model.field, [required()], setter),
+      field: new FormControl<string>(() => model.field, [required()], {
+        onSelectValidValue: setter,
+      }),
     });
     await form.wait();
 
@@ -68,17 +79,21 @@ describe('FormControl', () => {
     const primarySetter = jest.fn<void, [string]>();
     const dependentSetter = jest.fn<void, [string]>();
 
-    interface IForm extends AbstractControls {
+    interface IForm extends GroupControls {
       primaryField: FormControl<string>;
       dependentField: FormControl<string>;
     }
 
     class Component {
       @observable form: FormGroup<IForm> = new FormGroup({
-        primaryField: new FormControl<string>('foo', [required()], primarySetter, { callSetterOnInitialize: false }),
-        dependentField: new FormControl<string>('bar', [required()], dependentSetter, {
+        primaryField: new FormControl<string>('foo', [required()], {
+          onSelectValidValue: primarySetter,
+          callSelectValidValueOnInitialize: false,
+        }),
+        dependentField: new FormControl<string>('bar', [required()], {
+          onSelectValidValue: dependentSetter,
           activate: () => this.form && this.form.controls.primaryField.value === 'foo',
-          callSetterOnInitialize: false,
+          callSelectValidValueOnInitialize: false,
         }),
       });
     }
@@ -95,17 +110,21 @@ describe('FormControl', () => {
     const primarySetter = jest.fn<void, [number]>();
     const dependentSetter = jest.fn<void, [string]>();
 
-    interface IForm extends AbstractControls {
+    interface IForm extends GroupControls {
       primaryField: FormControl<number>;
       dependentField: FormControl<string>;
     }
 
     class Component {
       @observable form: FormGroup<IForm> = new FormGroup({
-        primaryField: new FormControl<number>(123, [required() as any], primarySetter, { callSetterOnInitialize: false }),
-        dependentField: new FormControl<string>('bar', [required()], dependentSetter, {
+        primaryField: new FormControl<number>(123, [required() as any], {
+          onSelectValidValue: primarySetter,
+          callSelectValidValueOnInitialize: false,
+        }),
+        dependentField: new FormControl<string>('bar', [required()], {
+          onSelectValidValue: dependentSetter,
           activate: () => this.form && this.form.controls.primaryField.value === 456,
-          callSetterOnInitialize: false,
+          callSelectValidValueOnInitialize: false,
         }),
       });
     }
@@ -126,7 +145,7 @@ describe('FormControl', () => {
     const form = new FormArray(
       [new FormControl<string>('', []), new FormControl<string>('', [])],
       [
-        async (array: FormControl<string>[]): Promise<ValidationEvent[]> => {
+        async (array: FormArray<FormControl<string>>): Promise<ValidationEvent[]> => {
           if (array.some(i => !!i.value)) {
             return [
               {
@@ -146,5 +165,16 @@ describe('FormControl', () => {
     await form.wait();
 
     expect(form.valid).toBe(false);
+  });
+
+  it('wrapper on array', async () => {
+    const form = new FormArray(
+      [new FormControl<string>('', []), new FormControl<string>('', [])],
+      [wrapperSequentialCheck([wrapperActivateValidation(() => true, [])])],
+    );
+
+    await form.wait();
+
+    expect(form.valid).toBe(true);
   });
 });

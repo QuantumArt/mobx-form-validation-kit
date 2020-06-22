@@ -2,9 +2,22 @@ import { action, computed, IReactionDisposer, observable, reaction, runInAction 
 import { AbstractControl } from './abstract-control';
 import { FormAbstractGroup } from './form-abstract-group';
 import { ControlTypes } from './сontrol-types';
-import { ValidatorFunctionFormArrayHandler } from './events';
 import { FormAbstractControl } from './form-abstract-control';
 import { ValidationEvent } from './validation-event';
+import { ValidatorFunctionFormControlHandler } from './events';
+
+interface Options {
+  /**
+   * Additional information
+   * Блок с дополнительной информацией
+   */
+  additionalData?: any;
+  /**
+   * Function enable validation by condition (always enabled by default)
+   * / Функция включение валидаций по условию (по умолчанию включено всегда)
+   */
+  activate?: (() => boolean) | null;
+}
 
 export class FormArray<TControl extends AbstractControl> extends FormAbstractGroup {
   public readonly type: ControlTypes = ControlTypes.Array;
@@ -17,43 +30,30 @@ export class FormArray<TControl extends AbstractControl> extends FormAbstractGro
     return this.controls.length;
   }
 
-  private readonly validators: ValidatorFunctionFormArrayHandler<TControl[]>[] = [];
+  private readonly validators: ValidatorFunctionFormControlHandler<FormArray<TControl>>[] = [];
 
-  static of<TControl extends AbstractControl>(
-    /** FormControls */
-    controls: TControl[] = [],
-    /**
-     * Validators
-     * / Валидации
-     */
-    validators: ValidatorFunctionFormArrayHandler<TControl[]>[] = [],
-    /**
-     * Function enable validation by condition (always enabled by default)
-     * / Функция включение валидаций по условию (по умолчанию включено всегда)
-     */
-    activate: (() => boolean) | null = null,
-  ): FormArray<TControl> {
-    return new FormArray<TControl>(controls, validators, activate);
-  }
+  @observable
+  public additionalData: any;
 
   constructor(
     /** FormControls */
-    controls: TControl[] = [],
+    controls: TControl[],
+      /**
+   * Validators
+   * / Валидаторы
+   */
+    validators?: ValidatorFunctionFormControlHandler<FormArray<TControl>>[],
     /**
-     * Validators
-     * / Валидации
+     * options
+     * / Опции
      */
-    validators: ValidatorFunctionFormArrayHandler<TControl[]>[] = [],
-    /**
-     * Function enable validation by condition (always enabled by default)
-     * / Функция включение валидаций по условию (по умолчанию включено всегда)
-     */
-    activate: (() => boolean) | null = null,
+    options: Options = {},
   ) {
-    super(activate);
+    super(options.activate ?? null);
     this.inProcessing = false;
-    this.controls = controls;
-    this.validators = validators;
+    this.controls = controls ?? [];
+    this.validators = validators ?? [];
+    this.additionalData = options.additionalData ?? null;
 
     this.reactionOnIsActiveDisposer = reaction(
       () => this.isActive,

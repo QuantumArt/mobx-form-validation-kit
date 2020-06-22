@@ -1,9 +1,9 @@
 import { combineErrors } from './utilites';
 import { AbstractControl } from './abstract-control';
 import { FormControl } from './form-control';
-import { ValidatorFunctionFormControlHandler } from './events';
 import { ValidationEventTypes } from './validation-event-types';
 import { ValidationEvent } from './validation-event';
+import { ValidatorFunctionFormControlHandler } from './events';
 
 export const requiredValidator = 'required';
 export const required = <TEntity>(message: string = 'Поле обязательно', eventType = ValidationEventTypes.Error) => {
@@ -260,8 +260,8 @@ export const isEqual = <TEntity>(value: TEntity, message: string = 'Поля н�
  */
 export const wrapperActivateValidation = <TAbstractControl extends AbstractControl>(
   activate: (control: TAbstractControl) => boolean,
-  validators: ((control: TAbstractControl) => Promise<ValidationEvent[]>)[],
-  elseValidators: ((control: TAbstractControl) => Promise<ValidationEvent[]>)[] = [],
+  validators: ValidatorFunctionFormControlHandler<TAbstractControl>[],
+  elseValidators: ValidatorFunctionFormControlHandler<TAbstractControl>[] = [],
 ) => {
   return async (control: TAbstractControl): Promise<ValidationEvent[]> => {
     if (activate(control)) {
@@ -280,8 +280,8 @@ export const wrapperActivateValidation = <TAbstractControl extends AbstractContr
  * Wrapper for sequential validations (The next validation is launched only after the previous one passed without errors)
  * / Обертка для последовательных валидаций (Следующая валидация запускается, только после того, что предыдущая прошла без ошибок)
  */
-export const wrapperSequentialCheck = <TEntity>(validators: ValidatorFunctionFormControlHandler<TEntity>[]) => {
-  return async (control: FormControl<TEntity>): Promise<ValidationEvent[]> => {
+export const wrapperSequentialCheck = <TAbstractControl extends AbstractControl>(validators: ValidatorFunctionFormControlHandler<TAbstractControl>[]) => {
+  return async (control: TAbstractControl): Promise<ValidationEvent[]> => {
     for (const validator of validators) {
       const validationResult = await control.executeAsyncValidation(validator);
       if (validationResult.length > 0) {

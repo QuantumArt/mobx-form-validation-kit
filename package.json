@@ -1,13 +1,13 @@
 {
   "name": "@quantumart/mobx-form-validation-kit",
-  "version": "1.2.0",
+  "version": "2.0.0-alpha.0",
   "description": "mobx typescript form control validation",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "typings": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "jest"
+    "test": "tsc && jest"
   },
   "files": [
     "dist"
@@ -41,7 +41,7 @@
     "tslint-config-airbnb": "^5.11.1",
     "tslint-config-prettier": "^1.18.0",
     "tslint-plugin-prettier": "^2.0.1",
-    "typescript": "^3.5.3"
+    "typescript": "^3.7.3"
   },
   "prepublish": "tsc",
   "keywords": [

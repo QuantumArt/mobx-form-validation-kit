@@ -1,35 +1,34 @@
-import { action, IReactionDisposer, reaction, runInAction } from 'mobx';
-import { AbstractControls, ValidatorFunctionFormGroupHandler } from './events';
+import { action, IReactionDisposer, reaction, runInAction, observable } from 'mobx';
 import { AbstractControl } from './abstract-control';
 import { ValidationEvent } from './validation-event';
 import { FormAbstractGroup } from './form-abstract-group';
 import { FormAbstractControl } from './form-abstract-control';
 import { ControlTypes } from './сontrol-types';
+import { ValidatorFunctionFormControlHandler, GroupControls } from './events';
 
-export class FormGroup<TControls extends AbstractControls = AbstractControls> extends FormAbstractGroup {
+interface Options {
+  /**
+   * Additional information
+   * Блок с дополнительной информацией
+   */
+  additionalData?: any;
+  /**
+   * Function enable validation by condition (always enabled by default)
+   * / Функция включение валидаций по условию (по умолчанию включено всегда)
+   */
+  activate?: (() => boolean) | null;
+}
+
+export class FormGroup<TControls extends GroupControls = GroupControls> extends FormAbstractGroup {
   public readonly type: ControlTypes = ControlTypes.Group;
   private readonly reactionOnIsActiveDisposer: IReactionDisposer;
 
-  private readonly validators: ValidatorFunctionFormGroupHandler<TControls>[] = [];
+  private readonly validators: ValidatorFunctionFormControlHandler<FormGroup<TControls>>[] = [];
 
   public controls: TControls;
 
-  static of<TControls extends AbstractControls = AbstractControls>(
-    /** controls */
-    controls: TControls,
-    /**
-     * Validators
-     * / Валидаторы
-     */
-    validators: ValidatorFunctionFormGroupHandler<TControls>[] = [],
-    /**
-     * Function enable validation by condition (always enabled by default)
-     * / Функция включение валидаций по условию (по умолчанию включено всегда)
-     */
-    activate: (() => boolean) | null = null,
-  ): FormGroup<TControls> {
-    return new FormGroup<TControls>(controls, validators, activate);
-  }
+  @observable
+  public additionalData: any;
 
   constructor(
     /** controls */
@@ -37,17 +36,18 @@ export class FormGroup<TControls extends AbstractControls = AbstractControls> ex
     /**
      * Validators
      * / Валидаторы
-     */
-    validators: ValidatorFunctionFormGroupHandler<TControls>[] = [],
+    */
+    validators?: ValidatorFunctionFormControlHandler<FormGroup<TControls>>[],
     /**
-     * Function enable validation by condition (always enabled by default)
-     * / Функция включение валидаций по условию (по умолчанию включено всегда)
+     * options
+     * / Опции
      */
-    activate: (() => boolean) | null = null,
+    options: Options = {},
   ) {
-    super(activate);
+    super(options.activate ?? null);
     this.controls = controls;
-    this.validators = validators;
+    this.validators = validators ?? [];
+    this.additionalData = options.additionalData ?? null;
 
     this.reactionOnIsActiveDisposer = reaction(
       () => this.isActive,

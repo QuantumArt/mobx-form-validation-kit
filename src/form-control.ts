@@ -5,7 +5,7 @@ import { FormAbstractControl } from './form-abstract-control';
 import { ControlTypes } from './сontrol-types';
 import { noop } from './utilites';
 
-interface Options<TEntity, TAdditionalData> {
+interface Options<TEntity> {
   /**
    * Function enable validation by condition (always enabled by default)
    * Функция включение валидаций по условию (по умолчанию включено всегда)
@@ -15,20 +15,15 @@ interface Options<TEntity, TAdditionalData> {
    * Additional information
    * Блок с дополнительной информацией
    */
-  additionalData?: TAdditionalData | null;
-  /**
-   * Validations
-   * Валидациии
-   */
-  validators?: ValidatorFunctionFormControlHandler<TEntity>[];
+  additionalData?: any;
   /**
    * Callback get last valid value
    * Передает последние валидное значение
    */
-  setValidValue?: UpdateValidValueHandler<TEntity> | null;
+  onSelectValidValue?: UpdateValidValueHandler<TEntity> | null;
   /**
-   * Invoke `setValidValue` when `FormControl` is created.
-   * Вызвать `setValidValue` при создании `FormControl`.
+   * Invoke `onSelectValidValue` when `FormControl` is created.
+   * Вызвать `onSelectValidValue` при создании `FormControl`.
    * @default false if `valueOrGetter` is function and `true` otherwise
    * @example
    * const model = observable({ value: 123 });
@@ -39,10 +34,10 @@ interface Options<TEntity, TAdditionalData> {
    *   { callSetterOnInitialize: true }
    * ); // then we see { value: 123 } in console immediately
    */
-  callSetterOnInitialize?: boolean;
+  callSelectValidValueOnInitialize?: boolean;
   /**
-   * Invoke `setValidValue` when value-getter that passed as first argument changes its underlying value.
-   * Вызывать `setValidValue` при каждом изменении результата функции-геттера из первого аргумента.
+   * Invoke `onSelectValidValue` when value-getter that passed as first argument changes its underlying value.
+   * Вызывать `onSelectValidValue` при каждом изменении результата функции-геттера из первого аргумента.
    * @default false
    * @example
    * const model = observable({ value: 123 });
@@ -63,51 +58,13 @@ interface Options<TEntity, TAdditionalData> {
   reflectModelChanges?: boolean;
 }
 
-function isOptions<TEntity, TAdditionalData>(arg: any): arg is Options<TEntity, TAdditionalData> {
-  return typeof arg === 'object' && arg !== null && arg.constructor === Object;
-}
-
-function getOptions<TEntity, TAdditionalData>(
-  validators?: ValidatorFunctionFormControlHandler<TEntity>[] | Options<TEntity, TAdditionalData>,
-  setValidValue?: UpdateValidValueHandler<TEntity> | Options<TEntity, TAdditionalData> | null,
-  activate?: (() => boolean) | Options<TEntity, TAdditionalData> | null,
-  additionalData?: TAdditionalData | null,
-): Options<TEntity, TAdditionalData> {
-  const options: Options<TEntity, TAdditionalData> = {};
-  if (validators) {
-    if (isOptions<TEntity, TAdditionalData>(validators)) {
-      Object.assign(options, validators);
-    } else {
-      options.validators = validators;
-    }
-  }
-  if (setValidValue) {
-    if (isOptions<TEntity, TAdditionalData>(setValidValue)) {
-      Object.assign(options, setValidValue);
-    } else {
-      options.setValidValue = setValidValue;
-    }
-  }
-  if (activate) {
-    if (isOptions<TEntity, TAdditionalData>(activate)) {
-      Object.assign(options, activate);
-    } else {
-      options.activate = activate;
-    }
-  }
-  if (additionalData !== null) {
-    options.additionalData = additionalData;
-  }
-  return options;
-}
-
-export class FormControl<TEntity = string, TAdditionalData = any> extends FormAbstractControl {
+export class FormControl<TEntity = string> extends FormAbstractControl {
   private reactionOnValueGetterDisposer: IReactionDisposer | undefined;
   private reactionOnInternalValueDisposer: IReactionDisposer | undefined;
   private readonly reactionOnIsActiveDisposer: IReactionDisposer;
   private readonly reactionOnIsDirtyDisposer: IReactionDisposer;
   private readonly reactionOnIsFocusedDisposer: IReactionDisposer;
-  private readonly validators: ValidatorFunctionFormControlHandler<TEntity>[];
+  private readonly validators: ValidatorFunctionFormControlHandler<FormControl<TEntity>>[];
   private readonly setValidValue: UpdateValidValueHandler<TEntity>;
   private readonly callSetterOnInitialize: boolean;
   private readonly callSetterOnReinitialize: boolean;
@@ -173,9 +130,9 @@ export class FormControl<TEntity = string, TAdditionalData = any> extends FormAb
   }
 
   @observable
-  public additionalData: TAdditionalData | null;
+  public additionalData: any;
 
-  static for<M extends Object, K extends keyof M, TAdditionalData = any>(
+  static for<M extends Object, K extends keyof M>(
     /**
      * Model object containing the editable field
      * Объект модели, содержащий редактируемое поле
@@ -190,15 +147,14 @@ export class FormControl<TEntity = string, TAdditionalData = any> extends FormAb
      * Validations
      * Валидациии
      */
-    validators?: ValidatorFunctionFormControlHandler<M[K]>[] | Options<M[K], TAdditionalData>,
+    validators?: ValidatorFunctionFormControlHandler<FormControl<M[K]>>[],
     /**
      * Options
      * Опции
      */
-    modelOptions?: Options<M[K], TAdditionalData>,
-  ): FormControl<M[K], TAdditionalData> {
-    const { reflectModelChanges = true } = getOptions(validators, (value: M[K]) => (model[fieldName] = value), modelOptions);
-    return new FormControl<M[K], TAdditionalData>(reflectModelChanges ? () => model[fieldName] : model[fieldName], modelOptions);
+    modelOptions?: Options<M[K]>,
+  ): FormControl<M[K]> {
+    return new FormControl<M[K]>(model[fieldName], validators, modelOptions);
   }
 
   constructor(
@@ -208,32 +164,21 @@ export class FormControl<TEntity = string, TAdditionalData = any> extends FormAb
      */
     valueOrGetter: TEntity | (() => TEntity),
     /**
-     * Validators
-     * / Валидаторы
-     */
-    validators: ValidatorFunctionFormControlHandler<TEntity>[] | Options<TEntity, TAdditionalData> = [],
+     * Validations
+     * Валидациии
+    */
+    validators: ValidatorFunctionFormControlHandler<FormControl<TEntity>>[] = [],
     /**
-     * Callback get last valid value
-     * / Передает последние валидное значение
+     * options
+     * / Опции
      */
-    setValidValue: UpdateValidValueHandler<TEntity> | Options<TEntity, TAdditionalData> | null = null,
-    /**
-     * Function enable validation by condition (always enabled by default)
-     * / Функция включение валидаций по условию (по умолчанию включено всегда)
-     */
-    activate: (() => boolean) | Options<TEntity, TAdditionalData> | null = null,
-    /**
-     * Additional information
-     * / Блок с дополнительной информацией
-     */
-    additionalData: TAdditionalData | null = null,
+    options: Options<TEntity> = {},
   ) {
-    super(getOptions(validators, setValidValue, activate, additionalData).activate);
-    const options = getOptions(validators, setValidValue, activate, additionalData);
-    this.validators = options.validators || [];
-    this.setValidValue = options.setValidValue || noop;
-    this.additionalData = options.additionalData || null;
-    this.callSetterOnInitialize = options.callSetterOnInitialize == null ? typeof valueOrGetter !== 'function' : options.callSetterOnInitialize;
+    super(options.activate ?? null);
+    this.validators = validators ?? [];
+    this.setValidValue = options.onSelectValidValue ?? noop;
+    this.additionalData = options.additionalData ?? null;
+    this.callSetterOnInitialize = options.callSelectValidValueOnInitialize == null ? typeof valueOrGetter !== 'function' : options.callSelectValidValueOnInitialize;
     this.callSetterOnReinitialize = options.callSetterOnReinitialize == null ? false : options.callSetterOnReinitialize;
 
     this.reactionOnIsActiveDisposer = reaction(
