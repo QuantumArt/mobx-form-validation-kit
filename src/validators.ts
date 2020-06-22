@@ -125,13 +125,13 @@ export const absoluteLength = (length: number, message: string = `Длина о�
 };
 
 export const minValueValidator = 'minValue';
-export const minValue = <TEntity extends number | Date>(
+export const minValue = <TEntity extends (number | Date)>(
   min: TEntity | (() => TEntity),
   message: string = 'Значение слишком маленькое',
   eventType = ValidationEventTypes.Error,
 ) => {
   const getMin: () => TEntity = typeof min === 'function' ? min : () => min;
-  return async (control: FormControl<TEntity | string>): Promise<ValidationEvent[]> => {
+  return async (control: FormControl<TEntity>): Promise<ValidationEvent[]> => {
     if (control.value == null) {
       return [];
     }
@@ -158,13 +158,13 @@ export const minValue = <TEntity extends number | Date>(
 };
 
 export const maxValueValidator = 'minValue';
-export const maxValue = <TEntity extends number | Date>(
+export const maxValue = <TEntity extends (number | Date)>(
   max: TEntity | (() => TEntity),
   message: string = 'Значение слишком большое',
   eventType = ValidationEventTypes.Error,
 ) => {
   const getMax: () => TEntity = typeof max === 'function' ? max : () => max;
-  return async (control: FormControl<TEntity | string>): Promise<ValidationEvent[]> => {
+  return async (control: FormControl<TEntity>): Promise<ValidationEvent[]> => {
     if (control.value == null) {
       return [];
     }

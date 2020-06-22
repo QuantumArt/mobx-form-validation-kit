@@ -20,10 +20,10 @@ interface Options<TEntity> {
    * Callback get last valid value
    * Передает последние валидное значение
    */
-  onSelectValidValue?: UpdateValidValueHandler<TEntity> | null;
+  onChangeValidValue?: UpdateValidValueHandler<TEntity> | null;
   /**
-   * Invoke `onSelectValidValue` when `FormControl` is created.
-   * Вызвать `onSelectValidValue` при создании `FormControl`.
+   * Invoke `onChangeValidValue` when `FormControl` is created.
+   * Вызвать `onChangeValidValue` при создании `FormControl`.
    * @default false if `valueOrGetter` is function and `true` otherwise
    * @example
    * const model = observable({ value: 123 });
@@ -34,10 +34,10 @@ interface Options<TEntity> {
    *   { callSetterOnInitialize: true }
    * ); // then we see { value: 123 } in console immediately
    */
-  callSelectValidValueOnInitialize?: boolean;
+  callSetterOnInitialize?: boolean;
   /**
-   * Invoke `onSelectValidValue` when value-getter that passed as first argument changes its underlying value.
-   * Вызывать `onSelectValidValue` при каждом изменении результата функции-геттера из первого аргумента.
+   * Invoke `onChangeValidValue` when value-getter that passed as first argument changes its underlying value.
+   * Вызывать `onChangeValidValue` при каждом изменении результата функции-геттера из первого аргумента.
    * @default false
    * @example
    * const model = observable({ value: 123 });
@@ -176,9 +176,9 @@ export class FormControl<TEntity = string> extends FormAbstractControl {
   ) {
     super(options.activate ?? null);
     this.validators = validators ?? [];
-    this.setValidValue = options.onSelectValidValue ?? noop;
+    this.setValidValue = options.onChangeValidValue ?? noop;
     this.additionalData = options.additionalData ?? null;
-    this.callSetterOnInitialize = options.callSelectValidValueOnInitialize == null ? typeof valueOrGetter !== 'function' : options.callSelectValidValueOnInitialize;
+    this.callSetterOnInitialize = options.callSetterOnInitialize == null ? typeof valueOrGetter !== 'function' : options.callSetterOnInitialize;
     this.callSetterOnReinitialize = options.callSetterOnReinitialize == null ? false : options.callSetterOnReinitialize;
 
     this.reactionOnIsActiveDisposer = reaction(

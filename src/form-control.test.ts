@@ -1,4 +1,4 @@
-import { FormControl, FormGroup, required, ValidationEvent, wrapperActivateValidation, wrapperSequentialCheck } from '.';
+import { FormControl, FormGroup, required, ValidationEvent, wrapperActivateValidation, wrapperSequentialCheck, minValue, maxValue } from '.';
 import { observable } from 'mobx';
 import { FormArray } from './form-array';
 import { ValidationEventTypes } from './validation-event-types';
@@ -10,8 +10,8 @@ describe('FormControl', () => {
 
     const form = new FormGroup({
       field: new FormControl<string>('test', [required()], {
-        onSelectValidValue: setter,
-        callSelectValidValueOnInitialize: false,
+        onChangeValidValue: setter,
+        callSetterOnInitialize: false,
       }),
     });
     await form.wait();
@@ -24,8 +24,8 @@ describe('FormControl', () => {
 
     const form = new FormGroup({
       field: new FormControl<string>('test', [required()], {
-        onSelectValidValue: setter,
-        callSelectValidValueOnInitialize: false,
+        onChangeValidValue: setter,
+        callSetterOnInitialize: false,
       }),
     });
     await form.wait();
@@ -44,7 +44,7 @@ describe('FormControl', () => {
 
     const form = new FormGroup({
       field: new FormControl<string>(() => model.field, [required()], {
-        onSelectValidValue: setter,
+        onChangeValidValue: setter,
       }),
     });
     await form.wait();
@@ -64,7 +64,7 @@ describe('FormControl', () => {
 
     const form = new FormGroup({
       field: new FormControl<string>(() => model.field, [required()], {
-        onSelectValidValue: setter,
+        onChangeValidValue: setter,
       }),
     });
     await form.wait();
@@ -87,13 +87,13 @@ describe('FormControl', () => {
     class Component {
       @observable form: FormGroup<IForm> = new FormGroup({
         primaryField: new FormControl<string>('foo', [required()], {
-          onSelectValidValue: primarySetter,
-          callSelectValidValueOnInitialize: false,
+          onChangeValidValue: primarySetter,
+          callSetterOnInitialize: false,
         }),
         dependentField: new FormControl<string>('bar', [required()], {
-          onSelectValidValue: dependentSetter,
+          onChangeValidValue: dependentSetter,
           activate: () => this.form && this.form.controls.primaryField.value === 'foo',
-          callSelectValidValueOnInitialize: false,
+          callSetterOnInitialize: false,
         }),
       });
     }
@@ -118,13 +118,13 @@ describe('FormControl', () => {
     class Component {
       @observable form: FormGroup<IForm> = new FormGroup({
         primaryField: new FormControl<number>(123, [required() as any], {
-          onSelectValidValue: primarySetter,
-          callSelectValidValueOnInitialize: false,
+          onChangeValidValue: primarySetter,
+          callSetterOnInitialize: false,
         }),
         dependentField: new FormControl<string>('bar', [required()], {
-          onSelectValidValue: dependentSetter,
+          onChangeValidValue: dependentSetter,
           activate: () => this.form && this.form.controls.primaryField.value === 456,
-          callSelectValidValueOnInitialize: false,
+          callSetterOnInitialize: false,
         }),
       });
     }
@@ -175,6 +175,20 @@ describe('FormControl', () => {
 
     await form.wait();
 
+    expect(form.valid).toBe(true);
+  });
+
+  it('minValue and maxValue', async () => {
+    const form = new FormGroup({
+      count: new FormControl<number>(0, [minValue<number>(1, 'Должна быть оценка'), maxValue<number>(5, 'Должна быть оценка')]),
+    });
+
+    await form.wait();
+    expect(form.valid).toBe(false);
+
+    form.controls.count.value = 3;
+
+    await form.wait();
     expect(form.valid).toBe(true);
   });
 });
