@@ -96,6 +96,7 @@ export class FormGroup<TControls extends ControlsCollection = ControlsCollection
 
   @action
   public setDirty = (dirty: boolean) => {
+    this.isDirty = dirty;
     for (const control of this.getControls()) {
       control.setDirty(dirty);
     }
@@ -104,6 +105,7 @@ export class FormGroup<TControls extends ControlsCollection = ControlsCollection
 
   @action
   public setTouched = (touched: boolean) => {
+    this.isTouched = touched;
     for (const control of this.getControls()) {
       control.setTouched(touched);
     }

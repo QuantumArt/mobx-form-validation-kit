@@ -191,4 +191,23 @@ describe('FormControl', () => {
     await form.wait();
     expect(form.valid).toBe(true);
   });
+
+  it('activate validation', async () => {
+    class Component {
+      @observable activateValidation: boolean = false;
+    }
+
+    const component = new Component();
+    const form = new FormGroup({
+      str: new FormControl<string>('', [wrapperActivateValidation(() => component.activateValidation, [required()])]),
+    });
+
+    await form.wait();
+    expect(form.valid).toBe(true);
+
+    component.activateValidation = true;
+
+    await form.wait();
+    expect(form.valid).toBe(false);
+  });
 });

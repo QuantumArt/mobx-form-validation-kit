@@ -98,6 +98,7 @@ export class FormArray<TControl extends AbstractControl> extends FormAbstractGro
 
   @action
   public setDirty = (dirty: boolean) => {
+    this.isDirty = dirty;
     for (const control of this.controls) {
       control.setDirty(dirty);
     }
@@ -106,6 +107,7 @@ export class FormArray<TControl extends AbstractControl> extends FormAbstractGro
 
   @action
   public setTouched = (touched: boolean) => {
+    this.isTouched = touched;
     for (const control of this.controls) {
       control.setTouched(touched);
     }

@@ -1,4 +1,4 @@
-import { action, computed, when } from 'mobx';
+import { action, computed, when, observable } from 'mobx';
 import { AbstractControl } from './abstract-control';
 import { FormAbstractControl } from './form-abstract-control';
 
@@ -15,20 +15,26 @@ export abstract class FormAbstractGroup extends AbstractControl {
     return this.disabled || (this.errors.length === 0 && this.serverErrors.length === 0 && this.abbreviatedAND(control => control.valid));
   }
 
+  @observable
+  protected isDirty: boolean = false;
+
   @computed get pristine(): boolean {
-    return this.abbreviatedAND(control => control.pristine);
+    return !this.isDirty && this.abbreviatedAND(control => control.pristine);
   }
 
   @computed get dirty(): boolean {
-    return this.abbreviatedOR(control => control.dirty);
+    return this.isDirty || this.abbreviatedOR(control => control.dirty);
   }
 
+  @observable
+  protected isTouched: boolean = false;
+
   @computed get untouched(): boolean {
-    return this.abbreviatedAND(control => control.untouched);
+    return !this.isTouched && this.abbreviatedAND(control => control.untouched);
   }
 
   @computed get touched(): boolean {
-    return this.abbreviatedOR(control => control.touched);
+    return this.isTouched  || this.abbreviatedOR(control => control.touched);
   }
 
   @computed get focused(): boolean {
