@@ -2,7 +2,7 @@ import { FormControl, FormGroup, required, ValidationEvent, wrapperActivateValid
 import { observable } from 'mobx';
 import { FormArray } from './form-array';
 import { ValidationEventTypes } from './validation-event-types';
-import { GroupControls } from './events';
+import { ControlsCollection } from './events';
 
 describe('FormControl', () => {
   it('should not call setter when initialized by default', async () => {
@@ -79,7 +79,7 @@ describe('FormControl', () => {
     const primarySetter = jest.fn<void, [string]>();
     const dependentSetter = jest.fn<void, [string]>();
 
-    interface IForm extends GroupControls {
+    interface IForm extends ControlsCollection {
       primaryField: FormControl<string>;
       dependentField: FormControl<string>;
     }
@@ -110,7 +110,7 @@ describe('FormControl', () => {
     const primarySetter = jest.fn<void, [number]>();
     const dependentSetter = jest.fn<void, [string]>();
 
-    interface IForm extends GroupControls {
+    interface IForm extends ControlsCollection {
       primaryField: FormControl<number>;
       dependentField: FormControl<string>;
     }

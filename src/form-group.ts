@@ -4,7 +4,7 @@ import { ValidationEvent } from './validation-event';
 import { FormAbstractGroup } from './form-abstract-group';
 import { FormAbstractControl } from './form-abstract-control';
 import { ControlTypes } from './сontrol-types';
-import { ValidatorFunctionFormControlHandler, GroupControls } from './events';
+import { ValidatorFunctionFormControlHandler, ControlsCollection } from './events';
 
 interface Options {
   /**
@@ -19,7 +19,7 @@ interface Options {
   activate?: (() => boolean) | null;
 }
 
-export class FormGroup<TControls extends GroupControls = GroupControls> extends FormAbstractGroup {
+export class FormGroup<TControls extends ControlsCollection = ControlsCollection> extends FormAbstractGroup {
   public readonly type: ControlTypes = ControlTypes.Group;
   private readonly reactionOnIsActiveDisposer: IReactionDisposer;
 
