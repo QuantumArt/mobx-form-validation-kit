@@ -3,6 +3,7 @@ import { observable } from 'mobx';
 import { FormArray } from './form-array';
 import { ValidationEventTypes } from './validation-event-types';
 import { ControlsCollection } from './events';
+import { pattern } from './validators';
 
 describe('FormControl', () => {
   it('should not call setter when initialized by default', async () => {
@@ -206,6 +207,22 @@ describe('FormControl', () => {
     expect(form.valid).toBe(true);
 
     component.activateValidation = true;
+
+    await form.wait();
+    expect(form.valid).toBe(false);
+  });
+
+  it('wrapper sequential check', async () => {
+    const form = new FormGroup({
+      date: new FormControl<string | null>('10.10.1010', [
+        wrapperSequentialCheck([required(), pattern(/^\d\d.\d\d.\d\d\d\d$/, 'Введите дату в формате "дд.мм.гггг"')]),
+      ]),
+    });
+
+    await form.wait();
+    expect(form.valid).toBe(true);
+
+    form.controls.date.value = '10101010';
 
     await form.wait();
     expect(form.valid).toBe(false);

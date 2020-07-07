@@ -42,8 +42,12 @@ export const patternValidator = 'pattern';
  * Error if there is no pattern matching
  * / Ошибка, если нет соответствия паттерну
  */
-export const pattern = (regExp: RegExp, message: string = 'Присутствуют недопустимые символы', eventType = ValidationEventTypes.Error) => {
-  return async (control: FormControl<string> | FormControl<string | null>): Promise<ValidationEvent[]> => {
+export const pattern = <TEntity extends FormControl<string> | FormControl<string | null>>(
+  regExp: RegExp,
+  message: string = 'Присутствуют недопустимые символы',
+  eventType = ValidationEventTypes.Error,
+) => {
+  return async (control: TEntity): Promise<ValidationEvent[]> => {
     if (control.value != null && regExp.test(control.value)) {
       return [];
     }
@@ -61,8 +65,12 @@ export const pattern = (regExp: RegExp, message: string = 'Присутству�
  * Error if there is a pattern match
  * / Ошибка, если есть соответствие паттерну
  */
-export const invertPattern = (regExp: RegExp, message: string = 'Присутствуют недопустимые символы', eventType = ValidationEventTypes.Error) => {
-  return async (control: FormControl<string> | FormControl<string | null>): Promise<ValidationEvent[]> => {
+export const invertPattern = <TEntity extends FormControl<string> | FormControl<string | null>>(
+  regExp: RegExp,
+  message: string = 'Присутствуют недопустимые символы',
+  eventType = ValidationEventTypes.Error,
+) => {
+  return async (control: TEntity): Promise<ValidationEvent[]> => {
     if (control.value != null && regExp.test(control.value)) {
       return [
         {
@@ -125,7 +133,7 @@ export const absoluteLength = (length: number, message: string = `Длина о�
 };
 
 export const minValueValidator = 'minValue';
-export const minValue = <TEntity extends (number | Date)>(
+export const minValue = <TEntity extends number | Date>(
   min: TEntity | (() => TEntity),
   message: string = 'Значение слишком маленькое',
   eventType = ValidationEventTypes.Error,
@@ -158,7 +166,7 @@ export const minValue = <TEntity extends (number | Date)>(
 };
 
 export const maxValueValidator = 'minValue';
-export const maxValue = <TEntity extends (number | Date)>(
+export const maxValue = <TEntity extends number | Date>(
   max: TEntity | (() => TEntity),
   message: string = 'Значение слишком большое',
   eventType = ValidationEventTypes.Error,
@@ -280,7 +288,9 @@ export const wrapperActivateValidation = <TAbstractControl extends AbstractContr
  * Wrapper for sequential validations (The next validation is launched only after the previous one passed without errors)
  * / Обертка для последовательных валидаций (Следующая валидация запускается, только после того, что предыдущая прошла без ошибок)
  */
-export const wrapperSequentialCheck = <TAbstractControl extends AbstractControl>(validators: ValidatorFunctionFormControlHandler<TAbstractControl>[]) => {
+export const wrapperSequentialCheck = <TAbstractControl extends AbstractControl>(
+  validators: ValidatorFunctionFormControlHandler<TAbstractControl>[],
+) => {
   return async (control: TAbstractControl): Promise<ValidationEvent[]> => {
     for (const validator of validators) {
       const validationResult = await control.executeAsyncValidation(validator);
