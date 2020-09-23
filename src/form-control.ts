@@ -17,6 +17,11 @@ interface Options<TEntity> {
    */
   additionalData?: any;
   /**
+   * Callback always when value changes
+   * Срабатывает всегда при изменении значения
+   */
+  onChangeValue?: UpdateValidValueHandler<TEntity> | null;
+  /**
    * Callback get last valid value
    * Передает последние валидное значение
    */
@@ -66,6 +71,7 @@ export class FormControl<TEntity = string> extends FormAbstractControl {
   private readonly reactionOnIsFocusedDisposer: IReactionDisposer;
   private readonly validators: ValidatorFunctionFormControlHandler<FormControl<TEntity>>[];
   private readonly setValidValue: UpdateValidValueHandler<TEntity>;
+  private readonly onChangeValue: UpdateValidValueHandler<TEntity>;
   private readonly callSetterOnInitialize: boolean;
   private readonly callSetterOnReinitialize: boolean;
 
@@ -177,6 +183,7 @@ export class FormControl<TEntity = string> extends FormAbstractControl {
     super(options.activate ?? null);
     this.validators = validators ?? [];
     this.setValidValue = options.onChangeValidValue ?? noop;
+    this.onChangeValue = options.onChangeValue ?? noop;
     this.additionalData = options.additionalData ?? null;
     this.callSetterOnInitialize = options.callSetterOnInitialize == null ? typeof valueOrGetter !== 'function' : options.callSetterOnInitialize;
     this.callSetterOnReinitialize = options.callSetterOnReinitialize == null ? false : options.callSetterOnReinitialize;
@@ -224,6 +231,7 @@ export class FormControl<TEntity = string> extends FormAbstractControl {
         this.reactionOnInternalValueDisposer = reaction(
           () => this.internalValue,
           () => {
+            this.onChangeValue(this.internalValue);
             this.isDirty = true;
             this.serverErrors = [];
             this.checkInternalValue();
