@@ -1,35 +1,38 @@
 import { action, computed, IReactionDisposer, observable, reaction } from 'mobx';
 import { ValidationEvent } from './validation-event';
-import { ValidatorFunctionFormControlHandler, UpdateValidValueHandler } from './events';
-import { FormAbstractControl } from './form-abstract-control';
 import { ControlTypes } from './сontrol-types';
 import { noop } from './utilites';
+import { AbstractControl, UpdateValidValueHandler, ValidatorsFunction } from './abstract-control';
 
-interface Options<TEntity> {
+interface OptionsFormControl<TEntity> {
+  /**
+   * Validations
+   * / Валидациии
+   */
+  validators?: ValidatorsFunction<FormControl<TEntity>>[];
   /**
    * Function enable validation by condition (always enabled by default)
-   * Функция включение валидаций по условию (по умолчанию включено всегда)
+   * / Функция включение валидаций по условию (по умолчанию включено всегда)
    */
   activate?: (() => boolean) | null;
   /**
    * Additional information
-   * Блок с дополнительной информацией
+   * / Блок с дополнительной информацией
    */
   additionalData?: any;
   /**
    * Callback always when value changes
-   * Срабатывает всегда при изменении значения
+   * / Срабатывает всегда при изменении значения
    */
   onChangeValue?: UpdateValidValueHandler<TEntity> | null;
   /**
    * Callback get last valid value
-   * Передает последние валидное значение
+   * / Передает последние валидное значение
    */
   onChangeValidValue?: UpdateValidValueHandler<TEntity> | null;
   /**
    * Invoke `onChangeValidValue` when `FormControl` is created.
-   * Вызвать `onChangeValidValue` при создании `FormControl`.
-   * @default false if `valueOrGetter` is function and `true` otherwise
+   * / Вызвать `onChangeValidValue` при создании `FormControl`.
    * @example
    * const model = observable({ value: 123 });
    * new FormControl(
@@ -42,7 +45,7 @@ interface Options<TEntity> {
   callSetterOnInitialize?: boolean;
   /**
    * Invoke `onChangeValidValue` when value-getter that passed as first argument changes its underlying value.
-   * Вызывать `onChangeValidValue` при каждом изменении результата функции-геттера из первого аргумента.
+   * / Вызывать `onChangeValidValue` при каждом изменении результата функции-геттера из первого аргумента.
    * @default false
    * @example
    * const model = observable({ value: 123 });
@@ -55,27 +58,20 @@ interface Options<TEntity> {
    * model.value = 456; // then we see { value: 456 } in console
    */
   callSetterOnReinitialize?: boolean;
-  /**
-   * Apply model field changes to FormControl value changes.
-   * Применять изменения поля модели к полю формы.
-   * @default true
-   */
-  reflectModelChanges?: boolean;
 }
 
-export class FormControl<TEntity = string> extends FormAbstractControl {
+export class FormControl<TEntity = string> extends AbstractControl {
   private reactionOnValueGetterDisposer: IReactionDisposer | undefined;
   private reactionOnInternalValueDisposer: IReactionDisposer | undefined;
   private readonly reactionOnIsActiveDisposer: IReactionDisposer;
   private readonly reactionOnIsDirtyDisposer: IReactionDisposer;
   private readonly reactionOnIsFocusedDisposer: IReactionDisposer;
-  private readonly validators: ValidatorFunctionFormControlHandler<FormControl<TEntity>>[];
+  private readonly validators: ValidatorsFunction<FormControl<TEntity>>[];
   private readonly setValidValue: UpdateValidValueHandler<TEntity>;
   private readonly onChangeValue: UpdateValidValueHandler<TEntity>;
   private readonly callSetterOnInitialize: boolean;
   private readonly callSetterOnReinitialize: boolean;
 
-  public readonly type: ControlTypes = ControlTypes.Control;
   private isInitializedValue: boolean = false;
   private isInitializedActived: boolean = false;
   private get isInitialized(): boolean {
@@ -103,16 +99,8 @@ export class FormControl<TEntity = string> extends FormAbstractControl {
     return this.active && (this.errors.length > 0 || this.serverErrors.length > 0);
   }
 
-  @computed get valid(): boolean {
-    return this.disabled || (this.errors.length === 0 && this.serverErrors.length === 0);
-  }
-
   @observable
   private isDirty: boolean = false;
-
-  @computed get pristine(): boolean {
-    return !this.isDirty;
-  }
 
   @computed get dirty(): boolean {
     return this.isDirty;
@@ -120,9 +108,6 @@ export class FormControl<TEntity = string> extends FormAbstractControl {
 
   @observable
   private isTouched: boolean = false;
-  @computed get untouched(): boolean {
-    return !this.isTouched;
-  }
 
   @computed get touched(): boolean {
     return this.isTouched;
@@ -135,34 +120,6 @@ export class FormControl<TEntity = string> extends FormAbstractControl {
     return this.isFocused;
   }
 
-  @observable
-  public additionalData: any;
-
-  static for<M extends Object, K extends keyof M>(
-    /**
-     * Model object containing the editable field
-     * Объект модели, содержащий редактируемое поле
-     */
-    model: M,
-    /**
-     * Field name of the model to edit
-     * Имя редактируемого поля модели
-     */
-    fieldName: K,
-    /**
-     * Validations
-     * Валидациии
-     */
-    validators?: ValidatorFunctionFormControlHandler<FormControl<M[K]>>[],
-    /**
-     * Options
-     * Опции
-     */
-    modelOptions?: Options<M[K]>,
-  ): FormControl<M[K]> {
-    return new FormControl<M[K]>(model[fieldName], validators, modelOptions);
-  }
-
   constructor(
     /**
      * Initializing valueI
@@ -170,35 +127,31 @@ export class FormControl<TEntity = string> extends FormAbstractControl {
      */
     valueOrGetter: TEntity | (() => TEntity),
     /**
-     * Validations
-     * Валидациии
-    */
-    validators: ValidatorFunctionFormControlHandler<FormControl<TEntity>>[] = [],
-    /**
-     * options
+     * Options
      * / Опции
      */
-    options: Options<TEntity> = {},
+    options: OptionsFormControl<TEntity> = {},
   ) {
-    super(options.activate ?? null);
-    this.validators = validators ?? [];
+    super(options.activate ?? null, options.additionalData, ControlTypes.Control);
+    this.validators = options.validators ?? [];
     this.setValidValue = options.onChangeValidValue ?? noop;
     this.onChangeValue = options.onChangeValue ?? noop;
     this.additionalData = options.additionalData ?? null;
-    this.callSetterOnInitialize = options.callSetterOnInitialize == null ? typeof valueOrGetter !== 'function' : options.callSetterOnInitialize;
-    this.callSetterOnReinitialize = options.callSetterOnReinitialize == null ? false : options.callSetterOnReinitialize;
+    this.callSetterOnInitialize = options.callSetterOnInitialize ?? true;
+    this.callSetterOnReinitialize = options.callSetterOnReinitialize ?? false;
 
     this.reactionOnIsActiveDisposer = reaction(
-      () => this.isActive,
+      () => this.active,
       () => {
+        this.serverErrors = [];
         this.checkInternalValue(this.isInitialized || this.callSetterOnInitialize);
         this.isInitializedActived = true;
-        this.onChange.call();
+        this.onChange.call(this);
       },
     );
 
     this.reactionOnIsDirtyDisposer = reaction(
-      () => this.isDirty,
+      () => this.dirty,
       (isDirty: boolean) => {
         if (isDirty) {
           this.serverErrors = [];
@@ -207,7 +160,7 @@ export class FormControl<TEntity = string> extends FormAbstractControl {
     );
 
     this.reactionOnIsFocusedDisposer = reaction(
-      () => this.isFocused,
+      () => this.focused,
       (isFocused: boolean) => {
         if (!isFocused) {
           this.serverErrors = [];
@@ -234,16 +187,12 @@ export class FormControl<TEntity = string> extends FormAbstractControl {
             this.onChangeValue(this.internalValue);
             this.isDirty = true;
             this.serverErrors = [];
-            this.checkInternalValue();
-            this.onChange.call();
+            this.onChange.call(this);
+            this.checkInternalValue(true);
           },
         );
-
-        if (this.isInitialized) {
-          this.checkInternalValue(this.callSetterOnReinitialize);
-        } else {
-          this.checkInternalValue(this.callSetterOnInitialize);
-        }
+        this.onChange.call(this);
+        this.checkInternalValue(this.isInitialized ? this.callSetterOnReinitialize : this.callSetterOnInitialize);
         this.isInitializedValue = true;
       },
       { fireImmediately: true },
@@ -253,42 +202,22 @@ export class FormControl<TEntity = string> extends FormAbstractControl {
   };
 
   public executeAsyncValidation = (validator: (control: this) => Promise<ValidationEvent[]>): Promise<ValidationEvent[]> =>
-    this.baseExecuteAsyncValidation(validator, () => {
-      this.serverErrors = [];
-      this.checkInternalValue();
-    });
+    this.baseExecuteAsyncValidation(validator, () => this.checkInternalValue(true));
 
-  public runInAction = <TData = void>(action: () => Promise<TData>): Promise<TData> => {
-    return new Promise<TData>(resolve =>
-      this.reactionOnValidatorDisposers.push(
-        reaction(
-          () => action().then(resolve),
-          () => {
-            this.serverErrors = [];
-            this.checkInternalValue();
-          },
-        ),
-      ),
-    );
-  };
-
-  @action
-  public error = (key: string): ValidationEvent | undefined => {
-    return this.errors.find(err => err.key === key);
-  };
-
-  @action
-  public setValue = (value: TEntity) => {
-    this.internalValue = value;
-    return this;
-  };
-
+  /**
+  * Set marker "Value has changed" 
+  * / Установить маркер "Значение изменилось"
+  */
   @action
   public setDirty = (dirty: boolean) => {
     this.isDirty = dirty;
     return this;
   };
 
+  /**
+   * Set marker "field was in focus" 
+   * / Установить маркер "Поле было в фокусе"
+   */
   @action
   public setTouched = (touched: boolean) => {
     this.isTouched = touched;
@@ -302,7 +231,7 @@ export class FormControl<TEntity = string> extends FormAbstractControl {
   };
 
   public dispose = (): void => {
-    this.baseDispose();
+    super.dispose();
     this.reactionOnValueGetterDisposer && this.reactionOnValueGetterDisposer();
     this.reactionOnInternalValueDisposer && this.reactionOnInternalValueDisposer();
     this.reactionOnIsActiveDisposer();
@@ -310,10 +239,20 @@ export class FormControl<TEntity = string> extends FormAbstractControl {
     this.reactionOnIsFocusedDisposer();
   };
 
+  public runInAction(action: () => void): void {
+    this.reactionOnValidatorDisposers.push(
+      reaction(
+        () => action(),
+        () => this.checkInternalValue(true),
+      ),
+    );
+  };
+
   @action
-  private checkInternalValue = (shouldCallSetter: boolean = true) => {
+  private checkInternalValue = (shouldCallSetter: boolean) => {
     this.inProcessing = true;
-    this.onValidation(this.validators, this.checkInternalValue, () => {
+    this.serverErrors = [];
+    this.onValidation(this.validators, () => this.checkInternalValue(true), () => {
       if (shouldCallSetter && this.setValidValue && this.errors.length === 0) {
         this.setValidValue(this.internalValue);
       }

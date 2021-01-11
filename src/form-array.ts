@@ -1,145 +1,114 @@
-import { action, computed, IReactionDisposer, observable, reaction, runInAction } from 'mobx';
-import { AbstractControl } from './abstract-control';
+import { action, computed, IReactionDisposer, observable, reaction } from 'mobx';
+import { AbstractControl, ValidatorsFunction } from './abstract-control';
 import { FormAbstractGroup } from './form-abstract-group';
 import { ControlTypes } from './сontrol-types';
-import { FormAbstractControl } from './form-abstract-control';
 import { ValidationEvent } from './validation-event';
-import { ValidatorFunctionFormControlHandler } from './events';
 
-interface Options {
+export interface IOptionsFormArray<TAbstractControl extends AbstractControl> {
   /**
-   * Additional information
-   * Блок с дополнительной информацией
-   */
+    * Validations
+    * Валидациии
+    */
+  validators?: ValidatorsFunction<FormArray<TAbstractControl>>[],
+  /**
+    * Additional information
+    * Блок с дополнительной информацией
+    */
   additionalData?: any;
   /**
-   * Function enable validation by condition (always enabled by default)
-   * / Функция включение валидаций по условию (по умолчанию включено всегда)
-   */
+    * Function enable validation by condition (always enabled by default)
+    * / Функция включение валидаций по условию (по умолчанию включено всегда)
+    */
   activate?: (() => boolean) | null;
 }
 
-export class FormArray<TControl extends AbstractControl> extends FormAbstractGroup {
-  public readonly type: ControlTypes = ControlTypes.Array;
+export class FormArray<TAbstractControl extends AbstractControl> extends FormAbstractGroup {
   private readonly reactionOnIsActiveDisposer: IReactionDisposer;
 
   @observable
-  private controls: TControl[];
+  private controls: TAbstractControl[];
+
   @computed
   public get length(): number {
     return this.controls.length;
   }
 
-  private readonly validators: ValidatorFunctionFormControlHandler<FormArray<TControl>>[] = [];
-
-  @observable
-  public additionalData: any;
+  private readonly validators: ValidatorsFunction<FormArray<TAbstractControl>>[] = [];
 
   constructor(
-    /** FormControls */
-    controls: TControl[],
-      /**
-   * Validators
-   * / Валидаторы
-   */
-    validators?: ValidatorFunctionFormControlHandler<FormArray<TControl>>[],
     /**
-     * options
+      * Сontrols
+      * / Контролы
+      */
+    controls: TAbstractControl[],
+    /**
+     * Options
      * / Опции
      */
-    options: Options = {},
+    options: IOptionsFormArray<TAbstractControl> = {},
   ) {
-    super(options.activate ?? null);
+    super(options.activate ?? null, options.additionalData, ControlTypes.Array);
     this.inProcessing = false;
     this.controls = controls ?? [];
-    this.validators = validators ?? [];
-    this.additionalData = options.additionalData ?? null;
+    this.validators = options.validators ?? [];
 
     this.reactionOnIsActiveDisposer = reaction(
-      () => this.isActive,
+      () => this.active,
       () => {
         this.checkArrayValidations();
-        this.onChange.call();
+        this.onChange.call(this);
       },
     );
 
     for (const control of this.controls) {
-      control.onChange.add(() => {
+      control.onChange.addListen(() => {
         this.serverErrors = [];
         this.checkArrayValidations();
-        this.onChange.call();
+        this.onChange.call(this);
       });
     }
 
     this.checkArrayValidations();
   }
 
-  public get(index: number): TControl {
+  public get(index: number): TAbstractControl {
     return this.controls[index];
   }
 
   public dispose = (): void => {
-    this.baseDispose();
+    super.dispose();
     this.reactionOnIsActiveDisposer();
     for (const control of this.controls) {
       control.dispose();
     }
   };
 
+  public executeAsyncValidation = (validator: (control: this) => Promise<ValidationEvent[]>): Promise<ValidationEvent[]> =>
+    this.baseExecuteAsyncValidation(validator, () => this.checkArrayValidations());
+
   @action
   private checkArrayValidations = () => {
     this.inProcessing = true;
-    this.onValidation(this.validators, this.checkArrayValidations, () =>
-      runInAction(() => {
-        this.inProcessing = false;
-      }),
+    this.serverErrors = [];
+    this.onValidation(this.validators, this.checkArrayValidations, () => this.inProcessing = false);
+  };
+
+  public runInAction(action: () => void): void {
+    this.reactionOnValidatorDisposers.push(
+      reaction(
+        () => action(),
+        () => this.checkArrayValidations()
+      )
     );
   };
-
-  @action
-  public setDirty = (dirty: boolean) => {
-    this.isDirty = dirty;
-    for (const control of this.controls) {
-      control.setDirty(dirty);
-    }
-    return this;
-  };
-
-  @action
-  public setTouched = (touched: boolean) => {
-    this.isTouched = touched;
-    for (const control of this.controls) {
-      control.setTouched(touched);
-    }
-    return this;
-  };
-
-  @action
-  public allControls(): FormAbstractControl[] {
-    let controls: FormAbstractControl[] = [];
-    for (const control of this.controls.map(c => c as AbstractControl)) {
-      if (control.type === ControlTypes.Control) {
-        controls.push(control as FormAbstractControl);
-      } else if (control.type === ControlTypes.Group || control.type === ControlTypes.Array) {
-        controls = controls.concat((control as FormAbstractGroup).allControls());
-      }
-    }
-    return controls;
-  }
-
-  public executeAsyncValidation = (validator: (control: this) => Promise<ValidationEvent[]>): Promise<ValidationEvent[]> =>
-    this.baseExecuteAsyncValidation(validator, () => {
-      this.serverErrors = [];
-      this.checkArrayValidations();
-    });
 
   /**
    * Removes the last element from an array and returns it.
    */
   @action
-  public pop = (): TControl | undefined => {
+  public pop = (): TAbstractControl | undefined => {
     const removeControl = this.controls.pop();
-    this.onChange.call();
+    this.onChange.call(this);
     return removeControl;
   };
 
@@ -148,9 +117,9 @@ export class FormArray<TControl extends AbstractControl> extends FormAbstractGro
    * @param items New elements of the Array.
    */
   @action
-  public push = (...items: TControl[]): number => {
+  public push = (...items: TAbstractControl[]): number => {
     const newIndex = this.controls.push(...items);
-    this.onChange.call();
+    this.onChange.call(this);
     return newIndex;
   };
 
@@ -159,7 +128,7 @@ export class FormArray<TControl extends AbstractControl> extends FormAbstractGro
    * @param items Additional items to add to the end of array1.
    */
   @action
-  public concat = (...items: (TControl | ConcatArray<TControl>)[]): TControl[] => {
+  public concat = (...items: (TAbstractControl | ConcatArray<TAbstractControl>)[]): TAbstractControl[] => {
     return this.controls.concat(...items);
   };
 
@@ -170,14 +139,14 @@ export class FormArray<TControl extends AbstractControl> extends FormAbstractGro
   @action
   public clear = () => {
     this.controls = [];
-    this.onChange.call();
+    this.onChange.call(this);
   };
 
   /**
    * Reverses the elements in an Array.
    */
   @action
-  public reverse = (): TControl[] => {
+  public reverse = (): TAbstractControl[] => {
     return this.controls.reverse();
   };
 
@@ -185,7 +154,7 @@ export class FormArray<TControl extends AbstractControl> extends FormAbstractGro
    * Removes the first element from an array and returns it.
    */
   @action
-  public shift = (): TControl | undefined => {
+  public shift = (): TAbstractControl | undefined => {
     return this.controls.shift();
   };
 
@@ -194,7 +163,7 @@ export class FormArray<TControl extends AbstractControl> extends FormAbstractGro
    * @param start The beginning of the specified portion of the array.
    * @param end The end of the specified portion of the array.
    */
-  public slice = (start?: number, end?: number): TControl[] => {
+  public slice = (start?: number, end?: number): TAbstractControl[] => {
     return this.controls.slice(start, end);
   };
 
@@ -203,7 +172,7 @@ export class FormArray<TControl extends AbstractControl> extends FormAbstractGro
    * @param compareFn The name of the function used to determine the order of the elements. If omitted, the elements are sorted in ascending, ASCII character order.
    */
   @action
-  public sort = (compareFn?: (a: TControl, b: TControl) => number) => {
+  public sort = (compareFn?: (a: TAbstractControl, b: TAbstractControl) => number) => {
     return this.controls.slice().sort(compareFn);
   };
 
@@ -212,7 +181,7 @@ export class FormArray<TControl extends AbstractControl> extends FormAbstractGro
    * @param start The zero-based location in the array from which to start removing elements.
    * @param deleteCount The number of elements to remove.
    */
-  public splice = (start: number, deleteCount?: number): TControl[] => {
+  public splice = (start: number, deleteCount?: number): TAbstractControl[] => {
     return this.controls.splice(start, deleteCount);
   };
 
@@ -220,7 +189,7 @@ export class FormArray<TControl extends AbstractControl> extends FormAbstractGro
    * Inserts new elements at the start of an array.
    * @param items  Elements to insert at the start of the Array.
    */
-  public unshift = (...items: TControl[]): number => {
+  public unshift = (...items: TAbstractControl[]): number => {
     return this.controls.unshift(...items);
   };
 
@@ -229,7 +198,7 @@ export class FormArray<TControl extends AbstractControl> extends FormAbstractGro
    * @param searchElement The value to locate in the array.
    * @param fromIndex The array index at which to begin the search. If fromIndex is omitted, the search starts at index 0.
    */
-  public indexOf = (searchElement: TControl, fromIndex?: number): number => {
+  public indexOf = (searchElement: TAbstractControl, fromIndex?: number): number => {
     return this.controls.indexOf(searchElement, fromIndex);
   };
 
@@ -238,7 +207,7 @@ export class FormArray<TControl extends AbstractControl> extends FormAbstractGro
    * @param searchElement The value to locate in the array.
    * @param fromIndex The array index at which to begin the search. If fromIndex is omitted, the search starts at the last index in the array.
    */
-  public lastIndexOf = (searchElement: TControl, fromIndex?: number): number => {
+  public lastIndexOf = (searchElement: TAbstractControl, fromIndex?: number): number => {
     return this.controls.lastIndexOf(searchElement, fromIndex);
   };
 
@@ -247,7 +216,7 @@ export class FormArray<TControl extends AbstractControl> extends FormAbstractGro
    * @param callbackfn A function that accepts up to three arguments. The every method calls the callbackfn function for each element in array1 until the callbackfn returns false, or until the end of the array.
    * @param thisArg An object to which the this keyword can refer in the callbackfn function. If thisArg is omitted, undefined is used as the this value.
    */
-  public every = (callbackfn: (value: TControl, index: number, array: TControl[]) => unknown, thisArg?: any): boolean => {
+  public every = (callbackfn: (value: TAbstractControl, index: number, array: TAbstractControl[]) => unknown, thisArg?: any): boolean => {
     return this.controls.every(callbackfn, thisArg);
   };
 
@@ -256,7 +225,7 @@ export class FormArray<TControl extends AbstractControl> extends FormAbstractGro
    * @param callbackfn A function that accepts up to three arguments. The some method calls the callbackfn function for each element in array1 until the callbackfn returns true, or until the end of the array.
    * @param thisArg An object to which the this keyword can refer in the callbackfn function. If thisArg is omitted, undefined is used as the this value.
    */
-  public some = (callbackfn: (value: TControl, index: number, array: TControl[]) => unknown, thisArg?: any): boolean => {
+  public some = (callbackfn: (value: TAbstractControl, index: number, array: TAbstractControl[]) => unknown, thisArg?: any): boolean => {
     return this.controls.some(callbackfn, thisArg);
   };
 
@@ -265,7 +234,7 @@ export class FormArray<TControl extends AbstractControl> extends FormAbstractGro
    * @param callbackfn  A function that accepts up to three arguments. forEach calls the callbackfn function one time for each element in the array.
    * @param thisArg  An object to which the this keyword can refer in the callbackfn function. If thisArg is omitted, undefined is used as the this value.
    */
-  public forEach = (callbackfn: (value: TControl, index: number, array: TControl[]) => void, thisArg?: any): void => {
+  public forEach = (callbackfn: (value: TAbstractControl, index: number, array: TAbstractControl[]) => void, thisArg?: any): void => {
     return this.controls.forEach(callbackfn, thisArg);
   };
 
@@ -274,7 +243,7 @@ export class FormArray<TControl extends AbstractControl> extends FormAbstractGro
    * @param callbackfn A function that accepts up to three arguments. The map method calls the callbackfn function one time for each element in the array.
    * @param thisArg An object to which the this keyword can refer in the callbackfn function. If thisArg is omitted, undefined is used as the this value.
    */
-  public map = <U>(callbackfn: (value: TControl, index: number, array: TControl[]) => U, thisArg?: any): U[] => {
+  public map = <U>(callbackfn: (value: TAbstractControl, index: number, array: TAbstractControl[]) => U, thisArg?: any): U[] => {
     return this.controls.map(callbackfn, thisArg);
   };
 
@@ -283,7 +252,7 @@ export class FormArray<TControl extends AbstractControl> extends FormAbstractGro
    * @param callbackfn A function that accepts up to three arguments. The filter method calls the callbackfn function one time for each element in the array.
    * @param thisArg An object to which the this keyword can refer in the callbackfn function. If thisArg is omitted, undefined is used as the this value.
    */
-  public filter = (callbackfn: (value: TControl, index: number, array: TControl[]) => unknown, thisArg?: any): TControl[] => {
+  public filter = (callbackfn: (value: TAbstractControl, index: number, array: TAbstractControl[]) => unknown, thisArg?: any): TAbstractControl[] => {
     return this.controls.filter(callbackfn, thisArg);
   };
 
@@ -292,8 +261,8 @@ export class FormArray<TControl extends AbstractControl> extends FormAbstractGro
    * @param callbackfn A function that accepts up to four arguments. The reduce method calls the callbackfn function one time for each element in the array.
    * @param initialValue If initialValue is specified, it is used as the initial value to start the accumulation. The first call to the callbackfn function provides this value as an argument instead of an array value.
    */
-  public reduce = <U = TControl>(
-    callbackfn: (previousValue: U, currentValue: TControl, currentIndex: number, array: TControl[]) => U,
+  public reduce = <U = TAbstractControl>(
+    callbackfn: (previousValue: U, currentValue: TAbstractControl, currentIndex: number, array: TAbstractControl[]) => U,
     initialValue: U,
   ): U => {
     return this.controls.reduce(callbackfn, initialValue);
@@ -305,27 +274,13 @@ export class FormArray<TControl extends AbstractControl> extends FormAbstractGro
    * @param initialValue If initialValue is specified, it is used as the initial value to start the accumulation. The first call to the callbackfn function provides this value as an argument instead of an array value.
    */
   public reduceRight = <U>(
-    callbackfn: (previousValue: U, currentValue: TControl, currentIndex: number, array: TControl[]) => U,
+    callbackfn: (previousValue: U, currentValue: TAbstractControl, currentIndex: number, array: TAbstractControl[]) => U,
     initialValue: U,
   ): U => {
     return this.controls.reduceRight(callbackfn, initialValue);
   };
 
-  protected abbreviatedAND = (getData: (control: AbstractControl) => boolean) => {
-    for (const control of this.controls) {
-      if (!getData(control)) {
-        return false;
-      }
-    }
-    return true;
-  };
-
-  protected abbreviatedOR = (getData: (control: AbstractControl) => boolean) => {
-    for (const control of this.controls) {
-      if (getData(control)) {
-        return true;
-      }
-    }
-    return false;
-  };
+  protected *getControls(): IterableIterator<AbstractControl> {
+    return this.controls;
+  }
 }

@@ -1,6 +1,6 @@
-import { action, computed, when, observable } from 'mobx';
+import { action, computed } from 'mobx';
 import { AbstractControl } from './abstract-control';
-import { FormAbstractControl } from './form-abstract-control';
+import { ControlTypes } from './сontrol-types';
 
 export abstract class FormAbstractGroup extends AbstractControl {
   @computed get processing(): boolean {
@@ -11,30 +11,12 @@ export abstract class FormAbstractGroup extends AbstractControl {
     return this.active && (this.errors.length > 0 || this.serverErrors.length > 0 || this.abbreviatedOR(control => control.invalid));
   }
 
-  @computed get valid(): boolean {
-    return this.disabled || (this.errors.length === 0 && this.serverErrors.length === 0 && this.abbreviatedAND(control => control.valid));
-  }
-
-  @observable
-  protected isDirty: boolean = false;
-
-  @computed get pristine(): boolean {
-    return !this.isDirty && this.abbreviatedAND(control => control.pristine);
-  }
-
   @computed get dirty(): boolean {
-    return this.isDirty || this.abbreviatedOR(control => control.dirty);
-  }
-
-  @observable
-  protected isTouched: boolean = false;
-
-  @computed get untouched(): boolean {
-    return !this.isTouched && this.abbreviatedAND(control => control.untouched);
+    return this.abbreviatedOR(control => control.dirty);
   }
 
   @computed get touched(): boolean {
-    return this.isTouched  || this.abbreviatedOR(control => control.touched);
+    return this.abbreviatedOR(control => control.touched);
   }
 
   @computed get focused(): boolean {
@@ -42,16 +24,63 @@ export abstract class FormAbstractGroup extends AbstractControl {
   }
 
   /**
-   * Waiting for end of validation
-   * Ожидание окончания проверки
+  * Set marker "Value has changed" 
+  * / Установить маркер "Значение изменилось"
+  */
+  @action
+  public setDirty = (dirty: boolean) => {
+    for (const control of this.getControls()) {
+      control.setDirty(dirty);
+    }
+    return this;
+  };
+
+  /**
+   * Set marker "field was in focus" 
+   * / Установить маркер "Поле было в фокусе"
    */
   @action
-  public wait(): Promise<void> {
-    return when(() => !this.processing);
+  public setTouched = (touched: boolean) => {
+    for (const control of this.getControls()) {
+      control.setTouched(touched);
+    }
+    return this;
+  };
+
+  /**
+   * Returns a complete list of FormControls without attachments (terminal elements)
+   * Возвращает полный список FormControl-ов без вложений (терминальных элементов)
+   */
+  @action
+  public allControls(): AbstractControl[] {
+    let controls: AbstractControl[] = [];
+    for (const control of this.getControls()) {
+      if (control.type === ControlTypes.Control) {
+        controls.push(control as AbstractControl);
+      } else if (control.type === ControlTypes.Group || control.type === ControlTypes.Array) {
+        controls = controls.concat((control as FormAbstractGroup).allControls());
+      }
+    }
+    return controls;
   }
 
-  public abstract allControls(): FormAbstractControl[];
+  protected abstract getControls(): IterableIterator<AbstractControl>;
 
-  protected abstract abbreviatedAND(getData: (control: AbstractControl) => boolean): boolean;
-  protected abstract abbreviatedOR(getData: (control: AbstractControl) => boolean): boolean;
+  protected abbreviatedAND = (getData: (control: AbstractControl) => boolean): boolean => {
+    for (const control of this.getControls()) {
+      if (!getData(control)) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  protected abbreviatedOR = (getData: (control: AbstractControl) => boolean): boolean => {
+    for (const control of this.getControls()) {
+      if (getData(control)) {
+        return true;
+      }
+    }
+    return false;
+  };
 }
