@@ -12,13 +12,14 @@
   - Рассчитан на работу в React (можно использовать в проектах и без react)
   - Рассчитан на асинхронные валидации
   - Легко встроить в существующий проект.
-  - Есть версия для [Flutter](https://github.com/QuantumArt/flutter_mobx_form_validation_kit)
+
+Версия для [Flutter](https://github.com/QuantumArt/flutter_mobx_form_validation_kit)
 
 - [Get Started](#get_started2)
 - [Состояние контрола<](#state_control_rus2)
 - [Валидация](#validation_rus2)
 - [Проверка перед отправкой](#submit_rus2)
-- [ Заключение](#final_rus2)
+- [Заключение](#final_rus2)
 
 ### Get Started<a name="get_started2">
 Библиотеку можно применять при разных подходах к структуре кода, но я буду рассматривать библиотеку в концепции MVC (Model-View-Controller).
