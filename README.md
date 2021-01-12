@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/npm/l/@quantumart/mobx-form-validation-kit.svg?style=flat)](https://www.npmjs.com/package/@quantumart/mobx-form-validation-kit)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://www.npmjs.com/package/@quantumart/mobx-form-validation-kit)
 
-[Документация для 1 версии / Docs for version 1](#form_control1)
+- [Документация для 1 версии / Docs for version 1](#form_control1)
 
 ### Плюсы пакета<a name="pluses_rus">
   - Полностью на TypeScript
@@ -12,8 +12,7 @@
   - Рассчитан на работу в React (можно использовать в проектах и без react)
   - Рассчитан на асинхронные валидации
   - Легко встроить в существующий проект.
-
-[Версия для Flutter](https://github.com/QuantumArt/flutter_mobx_form_validation_kit)
+  - Есть версия для [Flutter](https://github.com/QuantumArt/flutter_mobx_form_validation_kit)
 
 - [Get Started](#get_started2)
 - [Состояние контрола<](#state_control_rus2)
@@ -21,12 +20,13 @@
 - [Проверка перед отправкой](#submit_rus2)
 - [ Заключение](#final_rus2)
 
-### Pluses of the package<a name="get_started2">
+### Get Started<a name="get_started2">
 Библиотеку можно применять при разных подходах к структуре кода, но я буду рассматривать библиотеку в концепции MVC (Model-View-Controller).
 Т.е. отображение происходит через «глупые» компоненты, а бизнес логика (в том числе и валидация) зашита в Stor-ах.
 Компоненты будут строятся на react-хуках, просто по причине, что он более современный, но библиотека хорошо работает и в «классовом подходе».
 
-```interface FormRegistration extends ControlsCollection {
+```
+interface FormRegistration extends ControlsCollection {
   name: FormControl<string>;
 }
 export class RegistrationStore {
@@ -72,7 +72,8 @@ export function RegistrationComponent() {
 | `touched: boolean` | Для FormControl – означает, что поле было в фокусе. Для FormGroup и FormArray означает, что один из вложенных FormControl-ов был в фокусе. Значение true в этом поле означает, что фокус был не только был поставлен, но и снят с поля. |
 | `focused: boolean` | для FormControl – означает, что поле сейчас в фокусе. Для FormGroup и FormArray означает, что один из вложенных FormControl-ов сейчас в фокусе. |
 
-```<input
+```
+<input
         type="text"
         value={store.form.controls.name.value}
         ref={(elment) => (props.control.element = elment)}
@@ -100,7 +101,8 @@ export function RegistrationComponent() {
 •	onFocus
 
 Можно воспользоваться небольшой оберткой, а именно InputFormControl или TextAreaFormControl.
-```<input
+```
+<input
         type="text"
         value={store.form.controls.name.value}
         {...InputFormControl.bindActions(store.form.controls.name)}
@@ -111,10 +113,7 @@ export function RegistrationComponent() {
 
 ### Состояние контрола<a name="state_control_rus2">
 
-В предыдущей главе мы разобрали именно ту часть FormControl-ов которую я так сильно упостил в своей первой статье "<a href="https://habr.com/ru/post/470537/">Новый пакет валидаций для React на Mobx @quantumart/mobx-form-validation-kit</a>
-Я постарался рассказать, как их создавать и как они нативно работают.
-Далее я поведаю как работать с валидациями и как создавать собственные.
-Но для начала разберем структуру вложенности контроллеров и их возможности.
+Разберем структуру вложенности контроллеров и их возможности.
 Библиотека mobx-form-validation-kit имеет три основных типа узлов:
 | Имя | Описание |
 | ------ | ------ |
@@ -123,6 +122,7 @@ export function RegistrationComponent() {
 | `FormArray` | позволяет создавать и управлять массивом валидационных компонентов. |
 
 Сами узлы можно складывать в древовидном стиле. Поддерживается любой уровень вложенности, но обычно все начинается в FormGroup.
+```
 FormGroup
 -- FormControl
 -- FormControl
@@ -132,12 +132,13 @@ FormGroup
 -- -- --  -- FormControl
 -- -- FormArray
 -- -- --  FormControl
+```
 
 Каждый объекта класса поддерживает следующий набор опций при определении:
 | Имя | Описание |
 | ------ | ------ |
 | `validators: ValidatorsFunction[]` | набор валидаторов. |
-| `activate: (() => boolean) | null` | функция позволят включать/отключать валидаций по условию (по умолчанию включено всегда). Например, валидность даты окончания услуги не нужно проверять, если не стоит галочка «Безлимитный». Как следствие, просто вписав сюда функцию которая проверив состояния observable поля отвечающего за чекбокс «Безлимитный», можно автоматически отключить все валидации привязанные к полю на проверку даты, а не прописывать эту логику в каждую из валидаций поля дата. |
+| `activate: (() => boolean)` | функция позволят включать/отключать валидаций по условию (по умолчанию включено всегда). Например, валидность даты окончания услуги не нужно проверять, если не стоит галочка «Безлимитный». Как следствие, просто вписав сюда функцию которая проверив состояния observable поля отвечающего за чекбокс «Безлимитный», можно автоматически отключить все валидации привязанные к полю на проверку даты, а не прописывать эту логику в каждую из валидаций поля дата. |
 | `additionalData: any` | блок с дополнительной информацией позволяет добавить дополнительную информацию к конкретному FormControl и использовать их в дальнейшем, например, для визуализации. Это удобно, если есть билдеры для FormControl в которых нужно захаркодить определённую информацию, а не передавать эту информацию через сложную связку данных в контролы для визуализации. Хотя точного и неоспоримого сценария применения для additionalData мы так и не смогли найти, но лучше иметь такую возможность, чем страдать без нее. |
 
 Кроме этого для FormControl есть дополнительный набор опций:
@@ -153,7 +154,8 @@ FormGroup
 | ------ | ------ |
 | `processing: boolean` |	в процессе анализа. mobx-form-validation-kit поддерживает асинхронные валидации, например те, что требуют запроса на сервер. Текущее состояние проверки можно узнать по данному полю.
 Кроме этого поддерживается метод wait, который позволяет дождаться окончания проверки. Например, при нажатии на кнопку «отправить данные» нужно прописать следующую конструкцию.
-```await this.form.wait();
+```
+await this.form.wait();
 if (this.form.invalid) {
 ...
 ```
@@ -207,7 +209,8 @@ if (this.form.invalid) {
 | `isEqualValidator` | проверят на точное значение |
 | `compareValidator` |обёртка для сложной проверки (ошибка, если проверка вернула false) |
 
-```<source lang="javascript">
+```
+<source lang="javascript">
       firstName: new FormControl<string>("", {
         validators: [
           requiredValidator(),
@@ -221,7 +224,8 @@ if (this.form.invalid) {
 Как можно заметить отработали все валидации в списке, для решения данной проблемы применяется обертка <b>wrapperSequentialCheck</b>. Ей вызов и её применение не чем не отличается от обычной функции-валидатора, но на вход она принимает массив из валидаторов которые будет запускается последовательно, т.е. следующая валидация запуститься только после того, что предыдущая прошла без ошибок.
 Второй функций оберткой является функция управления потоком валидаций. <b>wrapperActivateValidation</b> первым параметром принимает функцию в которой нужно прописать условия активаций валидаций. В отличии от функции activate которая передается в FormControl данная проверка рассчитана на более сложную логику. Предположим, что у нас общий билдер для целой формы FormGroup платежей, и более того на сервере есть только один метод который и принимает общий набор полей. Но вот загвоздка в том, что хоть форма и одна, в зависимости от «типа платежа» мы показываем различный набор полей пользователю. Так вот <b>wrapperActivateValidation</b> позволяет написать логику при которой будет осуществляться различные проверки в зависимости от типа платежа.
 
-```firstName: new FormControl<string>("", {
+```
+firstName: new FormControl<string>("", {
         validators: [
           wrapperSequentialCheck([
             requiredValidator(),
@@ -235,7 +239,8 @@ if (this.form.invalid) {
 
 Пользовательсяка валидация группы.
 
-```interface FormRange extends ControlsCollection {
+```
+interface FormRange extends ControlsCollection {
   min: FormControl<Date>;
   max: FormControl<Date>;
 }
@@ -249,8 +254,9 @@ interface FormRegistration extends ControlsCollection {
 }
 ```
 
-```this.form = new FormGroup<FormRegistration>({
-…
+```
+this.form = new FormGroup<FormRegistration>({
+...
       dateRange: new FormGroup<FormRange>(
         {
           min: new FormControl<Date>(new Date()),
@@ -278,7 +284,8 @@ if (group.controls.max.value < group.controls.min.value) {
 
 ### Проверка перед отправкой<a name="submit_rus2">
 
-```await this.form.wait(); 
+```
+await this.form.wait(); 
 if (this.form.invalid) { 
 this.form.setTouched(true); 
  const firstError = this.form.allControls().find(c => c.invalid && !!c.element);
