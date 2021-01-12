@@ -13,15 +13,15 @@
   - Рассчитан на асинхронные валидации
   - Легко встроить в существующий проект.
 
-Версия для [Flutter](https://github.com/QuantumArt/flutter_mobx_form_validation_kit)
+Версия для [Flutter](https://pub.dev/packages/flutter_mobx_form_validation_kit)
 
-- [Get Started](#get_started2)
+- [Getting Started](#get_started2)
 - [Состояние контрола<](#state_control_rus2)
 - [Валидация](#validation_rus2)
 - [Проверка перед отправкой](#submit_rus2)
 - [Заключение](#final_rus2)
 
-### Get Started<a name="get_started2">
+### Getting Started<a name="get_started2">
 Библиотеку можно применять при разных подходах к структуре кода, но я буду рассматривать библиотеку в концепции MVC (Model-View-Controller).
 Т.е. отображение происходит через «глупые» компоненты, а бизнес логика (в том числе и валидация) зашита в Stor-ах.
 Компоненты будут строятся на react-хуках, просто по причине, что он более современный, но библиотека хорошо работает и в «классовом подходе».
@@ -211,15 +211,14 @@ if (this.form.invalid) {
 | `compareValidator` |обёртка для сложной проверки (ошибка, если проверка вернула false) |
 
 ```
-<source lang="javascript">
-      firstName: new FormControl<string>("", {
-        validators: [
-          requiredValidator(),
-          minLengthValidator(2),
-          maxLengthValidator(5),
-          notContainSpacesValidator()
-        ],
-      })
+  firstName: new FormControl<string>("", {
+    validators: [
+      requiredValidator(),
+      minLengthValidator(2),
+      maxLengthValidator(5),
+      notContainSpacesValidator()
+    ],
+  })
 ```
 
 Как можно заметить отработали все валидации в списке, для решения данной проблемы применяется обертка <b>wrapperSequentialCheck</b>. Ей вызов и её применение не чем не отличается от обычной функции-валидатора, но на вход она принимает массив из валидаторов которые будет запускается последовательно, т.е. следующая валидация запуститься только после того, что предыдущая прошла без ошибок.
