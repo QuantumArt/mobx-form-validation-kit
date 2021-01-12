@@ -1,5 +1,6 @@
 import { action, computed } from 'mobx';
 import { AbstractControl } from './abstract-control';
+import { FormControl } from './form-control';
 import { ControlTypes } from './сontrol-types';
 
 export abstract class FormAbstractGroup extends AbstractControl {
@@ -52,11 +53,11 @@ export abstract class FormAbstractGroup extends AbstractControl {
    * Возвращает полный список FormControl-ов без вложений (терминальных элементов)
    */
   @action
-  public allControls(): AbstractControl[] {
-    let controls: AbstractControl[] = [];
+  public allControls(): FormControl<any>[] {
+    let controls: FormControl<any>[] = [];
     for (const control of this.getControls()) {
       if (control.type === ControlTypes.Control) {
-        controls.push(control as AbstractControl);
+        controls.push(control as FormControl<any>);
       } else if (control.type === ControlTypes.Group || control.type === ControlTypes.Array) {
         controls = controls.concat((control as FormAbstractGroup).allControls());
       }
