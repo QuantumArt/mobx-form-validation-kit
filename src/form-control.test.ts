@@ -1,4 +1,4 @@
-import { observable } from 'mobx';
+import { makeAutoObservable, makeObservable, observable, runInAction } from 'mobx';
 import { ControlsCollection } from './abstract-control';
 import { FormArray } from './form-array';
 import { FormControl } from './form-control';
@@ -21,6 +21,21 @@ describe('FormControl', () => {
     await form.wait();
 
     expect(setter).not.toBeCalled();
+  });
+
+  it('should call setter when initialized by default', async () => {
+    const setter = jest.fn<void, [string]>();
+
+    const form = new FormGroup({
+      field: new FormControl<string>('test', {
+        validators: [requiredValidator()],
+        onChangeValidValue: setter,
+        callSetterOnInitialize: true,
+      }),
+    });
+    await form.wait();
+
+    expect(setter).toBeCalledTimes(1);
   });
 
   it('should call setter once when value is changed', async () => {
@@ -57,7 +72,7 @@ describe('FormControl', () => {
 
     expect(form.controls.field.value).toEqual('test');
 
-    model.field = 'qwerty';
+    runInAction(() => model.field = 'qwerty');
     await form.wait();
 
     expect(form.controls.field.value).toEqual('qwerty');
@@ -77,7 +92,7 @@ describe('FormControl', () => {
     });
     await form.wait();
 
-    model.field = 'qwerty';
+    runInAction(() => model.field = 'qwerty');
     await form.wait();
 
     expect(setter).not.toBeCalled();
@@ -93,24 +108,30 @@ describe('FormControl', () => {
     }
 
     class Component {
-      @observable form: FormGroup<IForm> = new FormGroup({
-        primaryField: new FormControl<string>('foo', {
-          validators: [requiredValidator()],
-          onChangeValidValue: primarySetter,
-          callSetterOnInitialize: false,
-        }),
-        dependentField: new FormControl<string>('bar', {
-          validators: [requiredValidator()],
-          onChangeValidValue: dependentSetter,
-          activate: () => this.form && this.form.controls.primaryField.value === 'foo',
-          callSetterOnInitialize: false,
-        }),
-      });
+      form?: FormGroup<IForm>;
+      constructor() {
+        makeObservable(this, {
+          form: observable
+        });
+        runInAction(() => this.form = new FormGroup({
+          primaryField: new FormControl<string>('foo', {
+            validators: [requiredValidator()],
+            onChangeValidValue: primarySetter,
+            callSetterOnInitialize: false,
+          }),
+          dependentField: new FormControl<string>('bar', {
+            validators: [requiredValidator()],
+            onChangeValidValue: dependentSetter,
+            activate: () => (this.form && this.form.controls.primaryField.value === 'foo') ?? false,
+            callSetterOnInitialize: false,
+          }),
+        }));
+      }
     }
 
     const component = new Component();
 
-    await component.form.wait();
+    await component.form!.wait();
 
     expect(primarySetter).not.toBeCalled();
     expect(dependentSetter).not.toBeCalled();
@@ -126,26 +147,33 @@ describe('FormControl', () => {
     }
 
     class Component {
-      @observable form: FormGroup<IForm> = new FormGroup({
-        primaryField: new FormControl<number>(123, {
-          validators: [requiredValidator() as any],
-          onChangeValidValue: primarySetter,
-          callSetterOnInitialize: false,
-        }),
-        dependentField: new FormControl<string>('bar', {
-          validators: [requiredValidator()],
-          onChangeValidValue: dependentSetter,
-          activate: () => this.form && this.form.controls.primaryField.value === 456,
-          callSetterOnInitialize: false,
-        }),
-      });
+      form?: FormGroup<IForm>;
+      constructor() {
+        makeObservable(this, {
+          form: observable
+        });
+        runInAction(() =>
+          this.form = new FormGroup({
+            primaryField: new FormControl<number>(123, {
+              validators: [requiredValidator() as any],
+              onChangeValidValue: primarySetter,
+              callSetterOnInitialize: false,
+            }),
+            dependentField: new FormControl<string>('bar', {
+              validators: [requiredValidator()],
+              onChangeValidValue: dependentSetter,
+              activate: () => (this.form && this.form.controls.primaryField.value === 456) ?? false,
+              callSetterOnInitialize: false,
+            }),
+          }));
+      }
     }
 
     const component = new Component();
-    await component.form.wait();
+    await component.form!.wait();
 
-    component.form.controls.primaryField.value = 456;
-    await component.form.wait();
+    component.form!.controls.primaryField.value = 456;
+    await component.form!.wait();
 
     expect(primarySetter).toBeCalledTimes(1);
     expect(primarySetter).toBeCalledWith(456);
@@ -214,7 +242,10 @@ describe('FormControl', () => {
 
   it('activate validation', async () => {
     class Component {
-      @observable activateValidation: boolean = false;
+      activateValidation: boolean = false;
+      constructor() {
+        makeAutoObservable(this);
+      }
     }
 
     const component = new Component();
@@ -227,7 +258,7 @@ describe('FormControl', () => {
     await form.wait();
     expect(form.valid).toBe(true);
 
-    component.activateValidation = true;
+    runInAction(() => component.activateValidation = true);
 
     await form.wait();
     expect(form.valid).toBe(false);

@@ -1,4 +1,4 @@
-import { action, IReactionDisposer, reaction } from 'mobx';
+import { action, IReactionDisposer, makeObservable, reaction } from 'mobx';
 import { AbstractControl, ControlsCollection, ValidatorsFunction } from './abstract-control';
 import { ValidationEvent } from './validation-event';
 import { FormAbstractGroup } from './form-abstract-group';
@@ -42,6 +42,10 @@ export class FormGroup<TControls extends ControlsCollection = ControlsCollection
     options: IOptionsFormGroup<TControls> = {},
   ) {
     super(options.activate ?? null, options.additionalData, ControlTypes.Group);
+    makeObservable<FormGroup<TControls>, 'checkGroupValidations'>(this, {
+      checkGroupValidations: action
+    });
+
     this.controls = controls;
     this.validators = options.validators ?? [];
 
@@ -82,7 +86,6 @@ export class FormGroup<TControls extends ControlsCollection = ControlsCollection
     }
   }
 
-  @action
   private checkGroupValidations = () => {
     this.inProcessing = true;
     this.serverErrors = [];
