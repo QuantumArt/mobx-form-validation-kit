@@ -8,7 +8,7 @@
 
 ### Плюсы пакета<a name="pluses_rus">
   - Полностью на TypeScript
-  - Совместимость с Mobx (версии 4 и 5)
+  - Совместимость с Mobx ( mobx-form-validation-kit ^1.0.0 | ^2.0.0 совместим с версиями mobx ^4.0.0 | ^5.0.0 ) ( mobx-form-validation-kit ^6.0.0 совместим с mobx ^6.0.0 )
   - Рассчитан на работу в React (можно использовать в проектах и без react)
   - Рассчитан на асинхронные валидации
   - Легко встроить в существующий проект.
@@ -16,7 +16,7 @@
 Версия для [Flutter](https://pub.dev/packages/flutter_mobx_form_validation_kit)
 
 - [Getting Started](#get_started2)
-- [Состояние контрола<](#state_control_rus2)
+- [Состояние контрола](#state_control_rus2)
 - [Валидация](#validation_rus2)
 - [Проверка перед отправкой](#submit_rus2)
 - [Заключение](#final_rus2)
