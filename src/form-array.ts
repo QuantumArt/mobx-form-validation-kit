@@ -141,8 +141,7 @@ export class FormArray<TAbstractControl extends AbstractControl> extends FormAbs
   };
 
   /**
-   * Combines two or more arrays.
-   * @param items Additional items to add to the end of array1.
+   * Clear controls array.
    */
   public clear = () => {
     this.controls = [];
