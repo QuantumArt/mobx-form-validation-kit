@@ -1,4 +1,4 @@
-import { action, computed, IReactionDisposer, observable, reaction, runInAction, when } from 'mobx';
+import { action, computed, IReactionDisposer, makeObservable, observable, reaction, runInAction, when } from 'mobx';
 import { ControlTypes } from './сontrol-types';
 import { ValidationEvent } from './validation-event';
 import { ValidationEventTypes } from './validation-event-types';
@@ -17,7 +17,6 @@ export abstract class AbstractControl {
    */
   public readonly type: ControlTypes;
 
-  @observable
   protected inProcessing: boolean;
   /**
    * Validation in progress
@@ -31,7 +30,7 @@ export abstract class AbstractControl {
    * Error checking is disabled (control is always valid)
    * / Проверка ошибок отключена (контрол всегда валиден)
    */
-  @computed get disabled(): boolean {
+  get disabled(): boolean {
     return !this.active;
   }
 
@@ -39,7 +38,7 @@ export abstract class AbstractControl {
    * Error checking enabled
    * / Проверка ошибок включена
    */
-  @computed get active(): boolean {
+  get active(): boolean {
     return this.isActiveFunc();
   }
 
@@ -47,7 +46,6 @@ export abstract class AbstractControl {
    * Valid
    * / Валидные данные
    */
-  @computed
   get valid(): boolean {
     return !this.invalid;
   }
@@ -62,7 +60,6 @@ export abstract class AbstractControl {
    * The value has not changed
    * / Значение не изменялось
    */
-  @computed
   get pristine(): boolean {
     return !this.dirty;
   }
@@ -77,7 +74,6 @@ export abstract class AbstractControl {
    * The field was out of focus
    * / Поле не было в фокусе
    */
-  @computed
   get untouched(): boolean {
     return !this.touched;
   }
@@ -94,14 +90,12 @@ export abstract class AbstractControl {
    */
   abstract focused: boolean;
 
-  @observable
   private _serverErrors: string[] = [];
 
   /**
    * Additional (server) errors
    * / Дополнительтные (серверные) ошибки
    */
-  @computed
   public get serverErrors(): string[] {
     return this._serverErrors;
   }
@@ -118,7 +112,6 @@ export abstract class AbstractControl {
    * Errors list
    * / Список ошибок
    */
-  @observable.ref
   public errors: ValidationEvent[] = [];
 
   /**
@@ -133,7 +126,6 @@ export abstract class AbstractControl {
    * Warnings messages list
    * / Список сообщений с типом "Внимание"
    */
-  @observable.ref
   public warnings: ValidationEvent[] = [];
 
   /**
@@ -148,7 +140,6 @@ export abstract class AbstractControl {
    * Informations messages list
    * / Сообщения с типом "Информационные сообщения"
    */
-  @observable.ref
   public informationMessages: ValidationEvent[] = [];
 
   /**
@@ -163,7 +154,6 @@ export abstract class AbstractControl {
    * Successes messages list
    * / Сообщения с типом "успешная валидация"
    */
-  @observable.ref
   public successes: ValidationEvent[] = [];
 
   /**
@@ -178,7 +168,7 @@ export abstract class AbstractControl {
    * Max message level
    * / Максимальный уровень сообщения
    */
-  @computed get maxEventLevel(): ValidationEventTypes {
+  get maxEventLevel(): ValidationEventTypes {
     if (this.hasErrors()) return ValidationEventTypes.Error;
     if (this.hasWarnings()) return ValidationEventTypes.Warning;
     if (this.hasInformationMessages()) return ValidationEventTypes.Info;
@@ -201,7 +191,6 @@ export abstract class AbstractControl {
    * Field for transferring additional information
    * / Поле для передачи дополнительной информации (в логике не участвует) 
    */
-  @observable
   public additionalData: any;
 
   public element: HTMLElement | null = null;
@@ -221,6 +210,29 @@ export abstract class AbstractControl {
     additionalData: any,
     type: ControlTypes
   ) {
+    makeObservable<AbstractControl, 'inProcessing' | '_serverErrors' | 'onValidation'>(this, {
+      inProcessing: observable,
+
+      disabled: computed,
+      active: computed,
+      valid: computed,
+      pristine: computed,
+      untouched: computed,
+
+      _serverErrors: observable,
+      serverErrors: computed,
+
+      errors: observable.ref,
+      warnings: observable.ref,
+      informationMessages: observable.ref,
+      successes: observable.ref,
+      maxEventLevel: computed,
+
+      additionalData: observable,
+
+      onValidation: action
+    });
+
     this.inProcessing = false;
     this.isActiveFunc = activate === null ? () => true : activate;
     this.additionalData = additionalData;
@@ -250,7 +262,7 @@ export abstract class AbstractControl {
   private lastValidators: ValidatorsFunction<any>[] = [];
   private lastValidationFunction = noop;
   protected reactionOnValidatorDisposers: IReactionDisposer[] = [];
-  @action
+
   protected onValidation = async <TAbstractControl extends AbstractControl>(
     validators: ValidatorsFunction<TAbstractControl>[],
     onValidationFunction: () => void,

@@ -48,7 +48,7 @@ export const notContainSpacesValidatorKey = 'notContainSpaces';
 export const notContainSpacesValidator = (
   message: string = 'Не должен содержать пробелы',
   eventType = ValidationEventTypes.Error
-) => async (control: FormControl): Promise<ValidationEvent[]> => {
+) => async (control: FormControl<string> | FormControl<string | null>): Promise<ValidationEvent[]> => {
   if (control.value == null || !/\s/.test(control.value)) {
     return [];
   }
@@ -114,7 +114,7 @@ export const minLengthValidator = (
   message: string = `Минимальная длина ${minlength}`,
   eventType = ValidationEventTypes.Error
 ): ValidatorsFunction<FormControl> =>
-  async (control: FormControl): Promise<ValidationEvent[]> => {
+  async (control: FormControl<string> | FormControl<string | null>): Promise<ValidationEvent[]> => {
     if (control.value == null || minlength <= control.value.length || control.value === '') {
       return [];
     }
@@ -133,7 +133,7 @@ export const maxLengthValidator = (
   message: string = `Максимальная длина ${maxlength}`,
   eventType = ValidationEventTypes.Error
 ): ValidatorsFunction<FormControl> =>
-  async (control: FormControl): Promise<ValidationEvent[]> => {
+  async (control: FormControl<string> | FormControl<string | null>): Promise<ValidationEvent[]> => {
     if (control.value == null || control.value.length <= maxlength) {
       return [];
     }

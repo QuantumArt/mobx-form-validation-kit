@@ -1,4 +1,4 @@
-import { action, computed, IReactionDisposer, observable, reaction } from 'mobx';
+import { action, computed, IReactionDisposer, makeObservable, observable, reaction } from 'mobx';
 import { ValidationEvent } from './validation-event';
 import { ControlTypes } from './сontrol-types';
 import { noop } from './utilites';
@@ -75,18 +75,16 @@ export class FormControl<TEntity = string> extends AbstractControl {
   private isInitializedValue: boolean = false;
   private isInitializedActived: boolean = false;
   private get isInitialized(): boolean {
-    return this.isInitializedValue && this.isInitializedActived;
+    return this.isInitializedValue || this.isInitializedActived;
   }
 
-  @observable
-  // @ts-ignore: internalValue is always initialized in this.setInitialValue() call
-  private internalValue: TEntity;
-
-  @computed get processing(): boolean {
+  get processing(): boolean {
     return this.inProcessing;
   }
 
-  @computed
+  // @ts-ignore: internalValue is always initialized in this.setInitialValue() call
+  private internalValue: TEntity;
+
   public get value(): TEntity {
     return this.internalValue;
   }
@@ -95,28 +93,25 @@ export class FormControl<TEntity = string> extends AbstractControl {
     this.internalValue = value;
   }
 
-  @computed get invalid(): boolean {
+  get invalid(): boolean {
     return this.active && (this.errors.length > 0 || this.serverErrors.length > 0);
   }
 
-  @observable
   private isDirty: boolean = false;
 
-  @computed get dirty(): boolean {
+  get dirty(): boolean {
     return this.isDirty;
   }
 
-  @observable
   private isTouched: boolean = false;
 
-  @computed get touched(): boolean {
+  get touched(): boolean {
     return this.isTouched;
   }
 
-  @observable
   private isFocused: boolean = false;
 
-  @computed get focused(): boolean {
+  get focused(): boolean {
     return this.isFocused;
   }
 
@@ -133,6 +128,29 @@ export class FormControl<TEntity = string> extends AbstractControl {
     options: OptionsFormControl<TEntity> = {},
   ) {
     super(options.activate ?? null, options.additionalData, ControlTypes.Control);
+    makeObservable<FormControl<TEntity>, 'internalValue' | 'isDirty' | 'isTouched' | 'isFocused' | 'checkInternalValue'>(this, {
+      processing: computed,
+
+      internalValue: observable,
+      value: computed,
+
+      invalid: computed,
+
+      isDirty: observable,
+      dirty: computed,
+
+      isTouched: observable,
+      touched: computed,
+
+      isFocused: observable,
+      focused: computed,
+
+      setDirty: action,
+      setTouched: action,
+      setFocused: action,
+      checkInternalValue: action,
+    });
+
     this.validators = options.validators ?? [];
     this.setValidValue = options.onChangeValidValue ?? noop;
     this.onChangeValue = options.onChangeValue ?? noop;
@@ -142,9 +160,11 @@ export class FormControl<TEntity = string> extends AbstractControl {
 
     this.reactionOnIsActiveDisposer = reaction(
       () => this.active,
-      () => {
+      (active) => {
         this.serverErrors = [];
-        this.checkInternalValue(this.isInitialized || this.callSetterOnInitialize);
+        if (active) {
+          this.checkInternalValue(this.isInitialized || this.callSetterOnInitialize);
+        }
         this.isInitializedActived = true;
         this.onChange.call(this);
       },
@@ -208,7 +228,6 @@ export class FormControl<TEntity = string> extends AbstractControl {
   * Set marker "Value has changed" 
   * / Установить маркер "Значение изменилось"
   */
-  @action
   public setDirty = (dirty: boolean) => {
     this.isDirty = dirty;
     return this;
@@ -218,13 +237,11 @@ export class FormControl<TEntity = string> extends AbstractControl {
    * Set marker "field was in focus" 
    * / Установить маркер "Поле было в фокусе"
    */
-  @action
   public setTouched = (touched: boolean) => {
     this.isTouched = touched;
     return this;
   };
 
-  @action
   public setFocused = (focused: boolean) => {
     this.isFocused = focused;
     return this;
@@ -248,7 +265,6 @@ export class FormControl<TEntity = string> extends AbstractControl {
     );
   };
 
-  @action
   private checkInternalValue = (shouldCallSetter: boolean) => {
     this.inProcessing = true;
     this.serverErrors = [];

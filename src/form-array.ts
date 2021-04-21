@@ -1,4 +1,4 @@
-import { action, computed, IReactionDisposer, observable, reaction } from 'mobx';
+import { action, computed, IReactionDisposer, makeObservable, observable, reaction } from 'mobx';
 import { AbstractControl, ValidatorsFunction } from './abstract-control';
 import { FormAbstractGroup } from './form-abstract-group';
 import { ControlTypes } from './сontrol-types';
@@ -25,10 +25,8 @@ export interface IOptionsFormArray<TAbstractControl extends AbstractControl> {
 export class FormArray<TAbstractControl extends AbstractControl> extends FormAbstractGroup {
   private readonly reactionOnIsActiveDisposer: IReactionDisposer;
 
-  @observable
   private controls: TAbstractControl[];
 
-  @computed
   public get length(): number {
     return this.controls.length;
   }
@@ -48,6 +46,20 @@ export class FormArray<TAbstractControl extends AbstractControl> extends FormAbs
     options: IOptionsFormArray<TAbstractControl> = {},
   ) {
     super(options.activate ?? null, options.additionalData, ControlTypes.Array);
+    makeObservable<FormArray<TAbstractControl>, 'controls' | 'checkArrayValidations'>(this, {
+      controls: observable,
+      length: computed,
+
+      checkArrayValidations: action,
+      pop: action,
+      push: action,
+      concat: action,
+      clear: action,
+      reverse: action,
+      shift: action,
+      sort: action,
+    });
+
     this.inProcessing = false;
     this.controls = controls ?? [];
     this.validators = options.validators ?? [];
@@ -86,7 +98,6 @@ export class FormArray<TAbstractControl extends AbstractControl> extends FormAbs
   public executeAsyncValidation = (validator: (control: this) => Promise<ValidationEvent[]>): Promise<ValidationEvent[]> =>
     this.baseExecuteAsyncValidation(validator, () => this.checkArrayValidations());
 
-  @action
   private checkArrayValidations = () => {
     this.inProcessing = true;
     this.serverErrors = [];
@@ -105,7 +116,6 @@ export class FormArray<TAbstractControl extends AbstractControl> extends FormAbs
   /**
    * Removes the last element from an array and returns it.
    */
-  @action
   public pop = (): TAbstractControl | undefined => {
     const removeControl = this.controls.pop();
     this.onChange.call(this);
@@ -116,7 +126,6 @@ export class FormArray<TAbstractControl extends AbstractControl> extends FormAbs
    * Appends new elements to an array, and returns the new length of the array.
    * @param items New elements of the Array.
    */
-  @action
   public push = (...items: TAbstractControl[]): number => {
     const newIndex = this.controls.push(...items);
     this.onChange.call(this);
@@ -127,7 +136,6 @@ export class FormArray<TAbstractControl extends AbstractControl> extends FormAbs
    * Combines two or more arrays.
    * @param items Additional items to add to the end of array1.
    */
-  @action
   public concat = (...items: (TAbstractControl | ConcatArray<TAbstractControl>)[]): TAbstractControl[] => {
     return this.controls.concat(...items);
   };
@@ -136,7 +144,6 @@ export class FormArray<TAbstractControl extends AbstractControl> extends FormAbs
    * Combines two or more arrays.
    * @param items Additional items to add to the end of array1.
    */
-  @action
   public clear = () => {
     this.controls = [];
     this.onChange.call(this);
@@ -145,7 +152,6 @@ export class FormArray<TAbstractControl extends AbstractControl> extends FormAbs
   /**
    * Reverses the elements in an Array.
    */
-  @action
   public reverse = (): TAbstractControl[] => {
     return this.controls.reverse();
   };
@@ -153,7 +159,6 @@ export class FormArray<TAbstractControl extends AbstractControl> extends FormAbs
   /**
    * Removes the first element from an array and returns it.
    */
-  @action
   public shift = (): TAbstractControl | undefined => {
     return this.controls.shift();
   };
@@ -171,7 +176,6 @@ export class FormArray<TAbstractControl extends AbstractControl> extends FormAbs
    * Sorts an array.
    * @param compareFn The name of the function used to determine the order of the elements. If omitted, the elements are sorted in ascending, ASCII character order.
    */
-  @action
   public sort = (compareFn?: (a: TAbstractControl, b: TAbstractControl) => number) => {
     return this.controls.slice().sort(compareFn);
   };
