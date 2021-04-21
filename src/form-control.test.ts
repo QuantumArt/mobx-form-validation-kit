@@ -251,4 +251,16 @@ describe('FormControl', () => {
     await form.wait();
     expect(form.valid).toBe(false);
   });
+
+  it('wrapper on array', async () => {
+    const form = new FormArray([new FormControl<string>(''), new FormControl<string>('')], {
+      validators: [wrapperSequentialCheck([wrapperActivateValidation(() => true, [])])],
+    });
+
+    await form.wait();
+    expect(form.map(e => e).length).toBe(2);
+    expect(form.allControls().length).toBe(2);
+
+    expect(form.valid).toBe(true);
+  });
 });
