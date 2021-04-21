@@ -98,7 +98,7 @@ export function RegistrationComponent() {
 
 Как мы видим, появилось большое количество кода, а именно методы
 • ref
-•	onChange 
+•	onChange
 •	onBlur
 •	onFocus
 
@@ -288,11 +288,11 @@ if (group.controls.max.value < group.controls.min.value) {
 ### Проверка перед отправкой<a name="submit_rus2">
 
 ```
-await this.form.wait(); 
-if (this.form.invalid) { 
-this.form.setTouched(true); 
+await this.form.wait();
+if (this.form.invalid) {
+this.form.setTouched(true);
  const firstError = this.form.allControls().find(c => c.invalid && !!c.element);
-if (!!firstError) { firstError.element.focus(); 
+if (!!firstError) { firstError.element.focus();
 }
 ```
 
@@ -333,7 +333,7 @@ if (!!firstError) { firstError.element.focus();
 - Easy to embed in an existing project.
 
 ### Installation<a name="install">
-```sh
+```typescript
 npm install @quantumart/mobx-form-validation-kit
 ```
 ### FormControl<a name="formcontrol">
@@ -358,7 +358,7 @@ In addition, there are basic abstract classes
 
 The best practice for creating a validating form would be the following idea.
 An object of the single `FormGroup` type is created for the form and the fields are listed therein
-```sh
+```typescript
 this.form = new FormGroup<IUserInfo>({
       name: new FormControl(
             this.userInfo.name,
@@ -375,7 +375,7 @@ this.form = new FormGroup<IUserInfo>({
 ```
 
 `FormGroup` supports nesting, i.e.
-```sh
+```typescript
 this.form = new FormGroup<IUserInfo>({
       name: new FormControl(
             this.userInfo.name,
@@ -431,7 +431,7 @@ Let's talk about the `FormControl` fields which are present both in `FormGroup` 
 | `processing` | means `in the process of analysis`. Because asynchronous validations are supported, for example, those that require a server request. The current state of the validation may be found in this field. |
 
 Moreover, `FormGroup` and` FormArray` support the `wait` method, which allows waiting for the validation to complete. For example, when you click on the "send data" button, the following structure should be specified.
-```sh
+```typescript
 await this.form.wait();
 	if (this.form.invalid) {
 	…
@@ -474,7 +474,7 @@ These were common fields for all controls, but each control also has fields uniq
 
 The `allControls` functionality is required if we want to find the first invalid element and put focus on it.
 in this case, the code would look like this:
-```sh
+```typescript
 await this.form.wait();
     if (this.form.invalid) {
       this.form.setTouched(true);
@@ -489,7 +489,7 @@ await this.form.wait();
 ### Validation <a name="validation">
 Of course, in addition to controls that allow working with data, we will need validations themselves. The package `@quantumart/mobx-form-validation-kit` typically contains a number of preset validations, as well as supports the creation of own custom validations.
 Example of setting validations for `FormControl` for the age field.
-```sh
+```typescript
 new FormControl<number>(
         this.userInfo.age,
         [required(), minValue(18, "Вам должно быть больше 18 лет.", ValidationEventTypes.Warning)],
@@ -531,7 +531,7 @@ Often a customer wants to see only one error, but not all at once. Moreover, the
 To solve this problem, the wrapperSequentialCheck wrapper is used. Its call and its application is no different from the usual validator function, but at the input, it receives an array of validators that will be launched sequentially, i.e., the next validation will be launched only after the previous one has ended without errors.
 The second wrapper function is the control function of the flow of validations. As the first parameter, `wrapperActivateValidation` takes a function, in which it is required to specify the conditions for activation of validations. Unlike the "activate" function, which is transferred to FormControl, this validation is designed for more complex logic. Let us suppose that we have a common builder for the entire `FormGroup` form of payments, and moreover, there is only one method on the server that accepts a common set of fields. But the catch is that even though the form is common, we show a different set of fields to the user depending on the "type of payment." Thus, `wrapperActivateValidation` allows writing a logic, in which various validations will be performed depending on the type of payment.
 The use of wrappers will look just like the use of ordinary functions.
-```sh
+```typescript
 new FormControl(
         this.userInfo.megapole,
         [wrapperActivateValidation(() => this.info.A === 10, [
@@ -553,7 +553,7 @@ This example shows that the required(), pattern(/\^d{10}$/) varifications will b
 Of course, the moment will come when the standard set of validations will no longer be enough.
 Then, it will be required to write own asynchronous functions. Fortunately, this may be done without much difficulty.
 `FormControl` was originally designed for asynchronous validation functions, which may want to go to the server for data and it is required to wait such a respond. And as a result, all the validations are asynchronous.
-```sh
+```typescript
 async function checkValueOnServer(control: FormControl): Promise<ValidationEvent[]> {
     if (control.value == null) {
       return [];
@@ -598,7 +598,7 @@ For "textarea," the binding will be like this
 | `events` | is an optional parameter containing a list of functions that may be called if there is a need to customize them. The point is that `bindActions` hangs the event handler functions on the "Element," and as a result, the overlapping of these events in the "element" will lead to the inoperability of either `FormControl,` or the developer function. To solve this problem, we transfer the required custom developer function to the "event" object. Currently, the following set of methods is supported. - ref - onChange - onBlur - onFocus |
 
 When using the library, you will be able to note that the following structure is the most common option for creating `FormControls'.
-```sh
+```typescript
 this.form = new FormGroup<IUserInfo>({
     name: new FormControl(
         this.userInfo.name,
@@ -608,7 +608,7 @@ this.form = new FormGroup<IUserInfo>({
 });
 ```
 The biggest problem here is the double mentioning of this.userInfo.name, both for primary initializing `FormControl` and for recording the result. Such a bunch may cause unwanted problems during the copy-paste and the `FormControl.for` function has been developed to solve them.
-```sh
+```typescript
 this.form = new FormGroup<IUserInfo>({
     name: FormControl.for(this.userInfo, 'name', [])
 });
@@ -620,13 +620,13 @@ If you have read until now, you are actually a hero. :)
 ### Example<a name="example">
 We will conduct the demonstration on the React project in TypeScript using mobx.
 For an existing project, we simply add a package.
-```sh
+```typescript
 npm install @quantumart/mobx-form-validation-kit
 ```
 
 The "Hello" component to the registration page. To do this, let us create the RegistrationStore class in a new RegistrationStore.ts file
 src\RegistrationStore.ts
-```sh
+```typescript
 import { observable } from "mobx";
 
 export class RegistrationStore {
@@ -640,7 +640,7 @@ export const registrationStore = new RegistrationStore();
 
 ```
 Let us modify the "Hello.ts" file as follows.
-```sh
+```typescript
 import * as React from "react";
 import { observer } from "mobx-react";
 import { registrationStore } from "../RegistrationStore";
@@ -675,7 +675,7 @@ To solve this bunch of problems
 
 First, let us create a small wrapper component to visualize errors.
 stc/ErrorWraper.tsx
-```sh
+```typescript
 import * as React from "react";
 import { observer } from "mobx-react";
 import { FormControl } from "@quantumart/mobx-form-validation-kit";
@@ -706,7 +706,7 @@ The "Hello.tsx" component is not much modified either.
 First, the extra changeName method is removed. Instead of it, the binding string `{... InputFormControl.bindActions (controls.name)}` is added. It contains all the required methods that will allow responding to data changes.
 Second, we added a wrapper for "input," but it is of course better to make a separate component with "input" inside, however then, for clarification, a slightly more complicated structure will be required.
 Third, a function, which initializes "form" in "store," is added to the constructor; and, what is the most important, `registrationStore.form.dispose()` is recorded in `componentWillUnmount.` Without this call, the "mobx" reactions that the FromControl hangs up may still live until the page is refreshed.
-```sh
+```typescript
 import * as React from "react";
 import { observer } from "mobx-react";
 import { registrationStore } from "../RegistrationStore";
@@ -745,7 +745,7 @@ export class Hello extends React.Component {
 The "RegistrationStore.ts" file has undergone additional changes.
 it has acquired the following structure.
 "UserInfo" has remained the main object (source object) with information about the user but in addition to this, a layer in the form of "form" has appeared. It is this layer that will be responsible for validations and for assigning data to the "userInfo" object.
-```sh
+```typescript
 import { observable } from "mobx";
 import {
   FormControl,
@@ -805,7 +805,7 @@ The package has been developed by [Quantum Art] (http://www.quantumart.ru), one 
   - Легко встроить в существующий проект.
 
 ### Установка<a name="install_rus">
-```sh
+```typescript
 npm install @quantumart/mobx-form-validation-kit
 ```
 ### FormControl<a name="formcontrol_rus">
@@ -830,7 +830,7 @@ npm install @quantumart/mobx-form-validation-kit
 
 Лучшей практикой по созданию валидирующей формы будет следующая идея.
 На форму создается объект типа один `FormGroup` и в нем уже перечисляются поля
-```sh
+```typescript
 this.form = new FormGroup<IUserInfo>({
       name: new FormControl(
             this.userInfo.name,
@@ -847,7 +847,7 @@ this.form = new FormGroup<IUserInfo>({
 ```
 
 `FormGroup` поддерживает вложенность, т.е.
-```sh
+```typescript
 this.form = new FormGroup<IUserInfo>({
       name: new FormControl(
             this.userInfo.name,
@@ -903,7 +903,7 @@ this.form = new FormGroup<IUserInfo>({
 | `processing` | в процессе анализа. Т.к. поддерживаются асинхронные валидации, нарпимер те, что требуют запроса на сервер. Текущее состояние проверки можно узнать по данному полю. |
 
 Кроме этого `FormGroup` и `FormArray` поддерживают метод `wait`, который позволяет дождаться окончания проверки. Например при нажатии на кнопку «отправить данные» нужно прописать следующую конструкцию.
-```sh
+```typescript
 await this.form.wait();
 	if (this.form.invalid) {
 	…
@@ -937,16 +937,16 @@ await this.form.wait();
 | ------ | ------ |
 | `value` | содержит текущее значение поля. Также данному полю можно присвоить новое значение. |
 
-`FormGroup` и `FormArray` содержат 
+`FormGroup` и `FormArray` содержат
 
 | Имя | Описание |
 | ------ | ------ |
 | `wait()` | метод позволяет ожидать окончания проверок всех (валидаций) в том числе и вложенных |
-| `allControls`() | данный метод позволяет получить полный набор всех FormControl в том числе и вложенных на разных уровнях. Т.е. по факту он разворачивает многоуровневый объект FormGroup, который также может содержать в себе FormGroup, в один большой список состоящий только из FormControl. | 
+| `allControls`() | данный метод позволяет получить полный набор всех FormControl в том числе и вложенных на разных уровнях. Т.е. по факту он разворачивает многоуровневый объект FormGroup, который также может содержать в себе FormGroup, в один большой список состоящий только из FormControl. |
 
 Функцонал `allControls` потребуется, если мы хотим найти первый невалидный элемент и поставить на него фокус.
 код, в таком случае будет выглядеть так:
-```sh
+```typescript
 await this.form.wait();
     if (this.form.invalid) {
       this.form.setTouched(true);
@@ -961,7 +961,7 @@ await this.form.wait();
 ### Валидации <a name="validation_rus">
 Конечно, кроме контролов, которые позволяют работать с данными, нам потребуется сами валидации. Пакет `@quantumart/mobx-form-validation-kit` естественно содержит ряд предустановленных валидаций, а также поддерживает создание собственный кастомных валидаций.
 Пример задания валидаций для `FormControl` для поля с указанием возраста.
-```sh
+```typescript
 new FormControl<number>(
         this.userInfo.age,
         [required(), minValue(18, "Вам должно быть больше 18 лет.", ValidationEventTypes.Warning)],
@@ -978,7 +978,7 @@ new FormControl<number>(
   - Error - ошибки
   - Warning - предупреждения
   - Info – информационные сообщения
-  - Success – сообщения о валидности. Например, можно проверить, что пароль действительно сложный. 
+  - Success – сообщения о валидности. Например, можно проверить, что пароль действительно сложный.
 
 В пакете идет следующий набор валидаций:
 
@@ -997,13 +997,13 @@ new FormControl<number>(
 | `compare`(expression: (value: TEntity) => boolean(… | написание собственной функции-валидации порождает много копипастного кода, для избавления этой проблемы была разработана эта обертка. Эта валидационная функция первым параметром принимает функцию, в которую в свою очередь передается текущее значение поля. Что позволяет сделать сложную проверку. Например, расчет хеша для ИНН или номера паспорта. И после вернуть true/false. Ошибка будет отображена, если проверка вернула false. |
 | `isEqual`(value: string… | простая проверка на соответствие строке. |
 
-Далее описаны функции обертки, которые служат для управления потоком запуска валидаций. 
-Нужно отметить, что переданный в `FormControl`, `FormGroup`, `FormArray` набор валидаций запускается единым скопом и по факту не имеет последовательности выполнения. Итогом работы мы будем иметь в полях errors, warnings, informationMessages, successes массивы состоявшие из объеденных в единый массив ошибок, предупреждений и т.д..  
+Далее описаны функции обертки, которые служат для управления потоком запуска валидаций.
+Нужно отметить, что переданный в `FormControl`, `FormGroup`, `FormArray` набор валидаций запускается единым скопом и по факту не имеет последовательности выполнения. Итогом работы мы будем иметь в полях errors, warnings, informationMessages, successes массивы состоявшие из объеденных в единый массив ошибок, предупреждений и т.д..
 Часто заказчик хочет увидеть лишь одну ошибку, а не все сразу. Более того, ТЗ может быть составлено так, что одна проверка выполняется только после того как прошла предыдущая.
 Для решения данной проблемы применяется обертка `wrapperSequentialCheck`. Ей вызов и её применение не чем не отличается от обычной функции-валидатора, но на вход она принимает массив из валидаторов которые будет запускается последовательно, т.е. следующая валидация запуститься только после того, что предыдущая прошла без ошибок.
 Второй функций оберткой является функция управления потоком валидаций. `wrapperActivateValidation` первым параметром принимает функцию в которой нужно прописать условия активаций валидаций. В отличии от функции activate которая передается в FormControl данная проверка рассчитана на более сложную логику. Предположим, что у нас общий билдер для целой формы `FormGroup` платежей, и более того на сервере есть только один метод который и принимает общий набор полей. Но вот загвоздка в том, что хоть форма и одна, в зависимости от «типа платежа» мы показываем различный набор полей пользователю. Так вот `wrapperActivateValidation` позволяет написать логику при которой будет осуществляться различные проверки в зависимости от типа платежа.
 Выглядеть применение оберток будет точно также, как и обычных функций.
-```sh
+```typescript
 new FormControl(
         this.userInfo.megapole,
         [wrapperActivateValidation(() => this.info.A === 10, [
@@ -1024,8 +1024,8 @@ new FormControl(
 
 Естественно, наступит момент когда стандартного набора валидаций уже не будет хватать.
 Тогда придется писать собственные асинхронные функции. Благо это делается без особых сложностей.
-`FormControl` изначально затачивался на асихронные валидационые функции, которым может захотеться сходить на сервер на данными и этот ответ нужно ждать. А как следствие все валидации являются асинхронными. 
-```sh
+`FormControl` изначально затачивался на асихронные валидационые функции, которым может захотеться сходить на сервер на данными и этот ответ нужно ждать. А как следствие все валидации являются асинхронными.
+```typescript
 async function checkValueOnServer(control: FormControl): Promise<ValidationEvent[]> {
     if (control.value == null) {
       return [];
@@ -1055,10 +1055,10 @@ async function checkValueOnServer(control: FormControl): Promise<ValidationEvent
 
 ### Extensions<a name="extensions_rus">
 Любая магия основывается на тривиальных вещах. И в этом случае, для работы постановки фокуса, получение изменений с полей требуется связать `FormControl` в конкретным полем ввода.
-Т.к. `FormControl` не ограничивает разработчика в типе валидируемых данных, то из-за универсальности пришлось немного пожертвовать применимостью в react элементам. 
-При этом, для input и textarea удалось создать простые функции биндинга данных на элемент, для остальных компонентов, обработчику придется все же приложить минимальные усилия для подстановки данных. 
+Т.к. `FormControl` не ограничивает разработчика в типе валидируемых данных, то из-за универсальности пришлось немного пожертвовать применимостью в react элементам.
+При этом, для input и textarea удалось создать простые функции биндинга данных на элемент, для остальных компонентов, обработчику придется все же приложить минимальные усилия для подстановки данных.
 
-Для input биндинг элемента на `FormControl` (name) будет выглядеть так. 
+Для input биндинг элемента на `FormControl` (name) будет выглядеть так.
 `<input type="text" {...InputFormControl.bindActions(controls.name)} />`
 Для textarea биндинг будет таким
 `<textarea {...TextAreaFormControl.bindActions(controls.name)}/>`
@@ -1071,7 +1071,7 @@ async function checkValueOnServer(control: FormControl): Promise<ValidationEvent
 | `events` | Необязательный параметр,  содержащий список функций, которые можно вызвать в случае необходимости их кастомизации. Суть в том, что `bindActions` навешивает функции-обработчики событий на Element, а как следствие, перекрытие этих событий в element приведет к неработоспособности либо `FormControl`-а, либо функции разработчика. Для решения этой проблемы. Мы передаем нужную кастомную функцию разработка в объект event. Сейас поддерживается следующий набор методов.  - ref  - onChange  - onBlur  - onFocus |
 
 При использовании библиотеки вы сможете заменить, что наиболее частым вариантом создания `FormControl`-ов является следующая конструкция.
-```sh
+```typescript
 this.form = new FormGroup<IUserInfo>({
       name: new FormControl(
         this.userInfo.name,
@@ -1080,8 +1080,8 @@ this.form = new FormGroup<IUserInfo>({
       )
     });
 ```
-Наибольшей проблемой здесь является двойное упоминание this.userInfo.name, для изначально инициализации `FormControl` и для записи результата. Такая связка может породить нежелательные проблемы во время копипаста и для их решения была разработана функция `FormControl.for` 
-```sh
+Наибольшей проблемой здесь является двойное упоминание this.userInfo.name, для изначально инициализации `FormControl` и для записи результата. Такая связка может породить нежелательные проблемы во время копипаста и для их решения была разработана функция `FormControl.for`
+```typescript
 this.form = new FormGroup<IUserInfo>({
       name: FormControl.for(this.userInfo, 'name', [])
     });
@@ -1093,13 +1093,13 @@ this.form = new FormGroup<IUserInfo>({
 ### Пример<a name="example_rus">
 Демонстрацию будем проводить на React проекте на TypeScript с использованием mobx.
 Для существующего проекта мы просто добавляем пакет.
-```sh
+```typescript
 npm install @quantumart/mobx-form-validation-kit
 ```
 
 Компонент Hello в страницу регистрации. Для этого создадим класс RegistrationStore в новом файле RegistrationStore.ts
 src\RegistrationStore.ts
-```sh
+```typescript
 import { observable } from "mobx";
 
 export class RegistrationStore {
@@ -1113,7 +1113,7 @@ export const registrationStore = new RegistrationStore();
 
 ```
 Файл Hello.ts, модифицируем так.
-```sh
+```typescript
 import * as React from "react";
 import { observer } from "mobx-react";
 import { registrationStore } from "../RegistrationStore";
@@ -1148,7 +1148,7 @@ export class Hello extends React.Component {
 
 Для начала создадим небольшой компонент-обертку для визуализации ошибок.
 stc/ErrorWraper.tsx
-```sh
+```typescript
 import * as React from "react";
 import { observer } from "mobx-react";
 import { FormControl } from "@quantumart/mobx-form-validation-kit";
@@ -1175,11 +1175,11 @@ export class ErrorWraper extends React.Component<Props> {
 ```
 В нем нет ничего сложного, просто выводим красный текст сообщений-ошибок, если они есть.
 
-Компонент Hello.tsx модифицируется тоже не сильно. 
+Компонент Hello.tsx модифицируется тоже не сильно.
 Во-первых - убирается лишний метод changeName. Вместо него добавилась строка биндинга `{...InputFormControl.bindActions(controls.name)}`. В ней содержится все необходимые методы которые позволят реагировать на изменения данных.
 Во-вторых – мы добавили обертку для input, конечно лучше сделать отдельный компонент с input внутри, но тогда, для пояснений, потребуется немного более сложна структура.
 В-третьих – в конструктор добавлена функция которая инициализирует form в store, а, самое главное, в `componentWillUnmount` прописали `registrationStore.form.dispose()`. Без это вызова могут mobx реакции которые развешивает `FromControl` могут так и остаться жить до самой перезагрузки страницы.
-```sh
+```typescript
 import * as React from "react";
 import { observer } from "mobx-react";
 import { registrationStore } from "../RegistrationStore";
@@ -1216,9 +1216,9 @@ export class Hello extends React.Component {
 
 ```
 Дополнительным изменения подвергся и файл RegistrationStore.ts.
-Он приобрёл следующую структуру. 
+Он приобрёл следующую структуру.
 Основным объектом (исходным объектом) с информацией о пользователе остался userInfo, но кроме этого появилась прослойка в виде form. Именно эта прослойка будет отвечать за валидации и за-за присвоения данных объекту userInfo.
-```sh
+```typescript
 import { observable } from "mobx";
 import {
   FormControl,
