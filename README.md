@@ -1,6 +1,7 @@
 # mobx-form-validation-kit
 
 [![Version](https://img.shields.io/npm/v/@quantumart/mobx-form-validation-kit?style=flat)](https://www.npmjs.com/package/@quantumart/mobx-form-validation-kit)
+![CI Workflow](https://github.com/QuantumArt/mobx-form-validation-kit/actions/workflows/ci.yml/badge.svg?branch=master)
 [![License](https://img.shields.io/npm/l/@quantumart/mobx-form-validation-kit.svg?style=flat)](https://www.npmjs.com/package/@quantumart/mobx-form-validation-kit)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://www.npmjs.com/package/@quantumart/mobx-form-validation-kit)
 
