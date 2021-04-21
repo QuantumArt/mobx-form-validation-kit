@@ -285,8 +285,8 @@ export class FormArray<TAbstractControl extends AbstractControl> extends FormAbs
   };
 
   protected *getControls(): IterableIterator<AbstractControl> {
-    for (const keyName in this.controls) {
-      yield this.controls[keyName];
+    for (const control of this.controls) {
+      yield control;
     }
   }
 }
