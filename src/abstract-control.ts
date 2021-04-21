@@ -1,10 +1,5 @@
 import { action, computed, IReactionDisposer, makeObservable, observable, reaction, runInAction, when } from 'mobx';
-import { ControlTypes } from './сontrol-types';
-import { ValidationEvent } from './validation-event';
-import { ValidationEventTypes } from './validation-event-types';
-import { combineErrors, noop } from './utilites';
-import { IDictionary } from './idictionary';
-import { Delegate } from './delegate';
+import { combineErrors, ControlTypes, Delegate, IDictionary, noop, ValidationEvent, ValidationEventTypes } from './internal';
 
 export type UpdateValidValueHandler<TEntity> = (val: TEntity) => void;
 export type ValidatorsFunction<TAbstractControl extends AbstractControl> = (control: TAbstractControl) => Promise<ValidationEvent[]>

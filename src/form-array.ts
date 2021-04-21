@@ -1,8 +1,5 @@
 import { action, computed, IReactionDisposer, makeObservable, observable, reaction } from 'mobx';
-import { AbstractControl, ValidatorsFunction } from './abstract-control';
-import { FormAbstractGroup } from './form-abstract-group';
-import { ControlTypes } from './сontrol-types';
-import { ValidationEvent } from './validation-event';
+import { AbstractControl, ControlTypes, FormAbstractGroup, ValidationEvent, ValidatorsFunction } from './internal';
 
 export interface IOptionsFormArray<TAbstractControl extends AbstractControl> {
   /**

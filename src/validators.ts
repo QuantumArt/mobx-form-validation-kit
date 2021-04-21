@@ -1,8 +1,4 @@
-import { combineErrors } from './utilites';
-import { AbstractControl, ValidatorsFunction } from './abstract-control';
-import { FormControl } from './form-control';
-import { ValidationEventTypes } from './validation-event-types';
-import { ValidationEvent } from './validation-event';
+import { AbstractControl, combineErrors, FormControl, ValidationEvent, ValidationEventTypes, ValidatorsFunction } from './internal';
 
 export const requiredValidatorKey = 'required';
 export const requiredValidator = <TEntity>(

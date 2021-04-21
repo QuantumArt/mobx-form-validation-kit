@@ -1,8 +1,5 @@
 import { action, computed, IReactionDisposer, makeObservable, observable, reaction } from 'mobx';
-import { ValidationEvent } from './validation-event';
-import { ControlTypes } from './сontrol-types';
-import { noop } from './utilites';
-import { AbstractControl, UpdateValidValueHandler, ValidatorsFunction } from './abstract-control';
+import { AbstractControl, ControlTypes, noop, UpdateValidValueHandler, ValidationEvent, ValidatorsFunction } from './internal';
 
 interface OptionsFormControl<TEntity> {
   /**

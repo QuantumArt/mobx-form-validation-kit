@@ -1,4 +1,4 @@
-import { ValidationEvent } from './validation-event';
+import { ValidationEvent } from './internal';
 
 export const noop = () => {};
 

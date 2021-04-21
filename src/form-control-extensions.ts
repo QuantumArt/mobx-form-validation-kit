@@ -1,5 +1,5 @@
-import { FormControl } from './form-control';
 import * as React from 'react';
+import { FormControl } from './internal';
 
 export class InputFormControl {
   public static bindActions(
