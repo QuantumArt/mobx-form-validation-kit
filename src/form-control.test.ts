@@ -1,11 +1,13 @@
 import { makeAutoObservable, makeObservable, observable, runInAction } from 'mobx';
-import { ControlsCollection } from './abstract-control';
-import { FormArray } from './form-array';
-import { FormControl } from './form-control';
-import { FormGroup } from './form-group';
-import { ValidationEvent } from './validation-event';
-import { ValidationEventTypes } from './validation-event-types';
-import { maxValueValidator, minValueValidator, patternValidator, requiredValidator, wrapperActivateValidation, wrapperSequentialCheck } from './validators';
+import { ControlsCollection, FormArray, FormControl, FormGroup, ValidationEvent, ValidationEventTypes } from './internal';
+import {
+  maxValueValidator,
+  minValueValidator,
+  patternValidator,
+  requiredValidator,
+  wrapperActivateValidation,
+  wrapperSequentialCheck,
+} from './validators';
 
 describe('FormControl', () => {
   it('should not call setter when initialized by default', async () => {
