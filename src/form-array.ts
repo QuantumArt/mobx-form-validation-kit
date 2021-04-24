@@ -83,6 +83,10 @@ export class FormArray<TAbstractControl extends AbstractControl> extends FormAbs
     this.checkArrayValidations();
   }
 
+  public getValue() {
+    return this.map(item => item.getValue());
+  }
+
   public get(index: number): TAbstractControl {
     return this.controls[index];
   }

@@ -1,0 +1,16 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FormControl getValue allows to get all values recursivelly 1`] = `
+Object {
+  "array": Array [
+    "",
+    "",
+  ],
+  "field": "f1",
+  "field2": "",
+  "subform": Object {
+    "field": "sub-f1",
+    "field2": "",
+  },
+}
+`;

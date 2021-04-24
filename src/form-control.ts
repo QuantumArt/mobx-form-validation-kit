@@ -221,6 +221,10 @@ export class FormControl<TEntity = string> extends AbstractControl {
     return this;
   };
 
+  public getValue() {
+    return this.value;
+  }
+
   public executeAsyncValidation = (validator: (control: this) => Promise<ValidationEvent[]>): Promise<ValidationEvent[]> =>
     this.baseExecuteAsyncValidation(validator, () => this.checkInternalValue(true));
 

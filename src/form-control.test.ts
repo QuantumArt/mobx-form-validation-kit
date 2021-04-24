@@ -294,4 +294,61 @@ describe('FormControl', () => {
 
     expect(form.valid).toBe(true);
   });
+
+  it('top-level form valid status considers all nested controls', async () => {
+    const form = new FormGroup({
+      field: new FormControl<string>('', {
+        validators: [requiredValidator()],
+      }),
+      field2: new FormControl<string>('', {
+        validators: [requiredValidator()],
+      }),
+    });
+
+    await form.wait();
+    // form not valid
+    expect(form.valid).toBe(false);
+    // ... but does not have top-level errors
+    expect(form.errors).toStrictEqual([]);
+    expect(form.hasErrors()).toBe(false);
+    // ... errors can be found on individual fields
+    expect(form.controls.field.errors).toStrictEqual([{ key: 'required', message: 'Поле обязательно', type: 0 }]);
+    // now fill in a value
+    form.controls.field.value = 'test';
+    form.controls.field2.value = 'test';
+    await form.wait();
+    expect(form.valid).toBe(true);
+    expect(form.errors).toStrictEqual([]);
+    expect(form.controls.field.errors).toStrictEqual([]);
+  });
+
+  it('getValue allows to get all values recursivelly', () => {
+    const subform = new FormGroup({
+      field: new FormControl<string>('', {
+        validators: [requiredValidator()],
+      }),
+      field2: new FormControl<string>('', {
+        validators: [requiredValidator()],
+      }),
+    });
+
+    const arrayForm = new FormArray([new FormControl<string>(''), new FormControl<string>('')], {
+      validators: [wrapperSequentialCheck([wrapperActivateValidation(() => true, [])])],
+    });
+    const form = new FormGroup({
+      field: new FormControl<string>('', {
+        validators: [requiredValidator()],
+      }),
+      field2: new FormControl<string>('', {
+        validators: [requiredValidator()],
+      }),
+      subform: subform,
+      array: arrayForm,
+    });
+
+    form.controls.field.value = 'f1';
+    form.controls.subform.controls.field.value = 'sub-f1';
+
+    expect(form.getValue()).toMatchSnapshot();
+  });
 });
