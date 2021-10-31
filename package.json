@@ -26,7 +26,7 @@
   },
   "peerDependencies": {
     "mobx": "^4.0.0 || ^5.0.0",
-    "react": "^16.8.0"
+    "react": ">=16.0.0"
   },
   "devDependencies": {
     "@types/jest": "^26.0.22",
