@@ -4,7 +4,9 @@ import { ControlTypes } from './сontrol-types';
 import { noop } from './utilites';
 import { AbstractControl, UpdateValidValueHandler, ValidatorsFunction } from './abstract-control';
 
-interface OptionsFormControl<TEntity> {
+type Comparer<TEntity> = (prev: TEntity, current: TEntity) => boolean;
+
+export interface OptionsFormControl<TEntity> {
   /**
    * Validations
    * / Валидациии
@@ -58,6 +60,7 @@ interface OptionsFormControl<TEntity> {
    * model.value = 456; // then we see { value: 456 } in console
    */
   callSetterOnReinitialize?: boolean;
+  comparer?: Comparer<TEntity>;
 }
 
 export class FormControl<TEntity = string> extends AbstractControl {
@@ -115,12 +118,35 @@ export class FormControl<TEntity = string> extends AbstractControl {
     return this.isFocused;
   }
 
+  private get initialValueGettter(): () => TEntity {
+    const valueOrGetter = this.valueOrGetter;
+    return valueOrGetter instanceof Function ? valueOrGetter : () => valueOrGetter;
+  }
+
+  private comparer: Comparer<TEntity>;
+
+  /** 
+   * Get Initializing value
+   * / Получить инициализирующее значение 
+   */
+  public get initialValue() {
+    return this.initialValueGettter();
+  }
+
+  /**
+   * Changed value is not equal to initializing value
+   * / Измененное значение не равно инициализирующему значению
+   */
+  public get changed() {
+    return this.comparer(this.initialValue, this.internalValue)
+  }
+
   constructor(
     /**
      * Initializing valueI
      * / Инициализирующие значение или его getter
      */
-    valueOrGetter: TEntity | (() => TEntity),
+    private valueOrGetter: TEntity | (() => TEntity),
     /**
      * Options
      * / Опции
@@ -150,6 +176,7 @@ export class FormControl<TEntity = string> extends AbstractControl {
       setFocused: action,
       checkInternalValue: action,
     });
+    this.comparer = options.comparer || ((prev: TEntity, next: TEntity) => prev === next);
 
     this.validators = options.validators ?? [];
     this.setValidValue = options.onChangeValidValue ?? noop;
@@ -192,30 +219,33 @@ export class FormControl<TEntity = string> extends AbstractControl {
   }
 
   public setInitialValue = (valueOrGetter: TEntity | (() => TEntity)) => {
-    const valueGetter = valueOrGetter instanceof Function ? valueOrGetter : () => valueOrGetter;
+    this.valueOrGetter = valueOrGetter;
 
     this.reactionOnValueGetterDisposer && this.reactionOnValueGetterDisposer();
 
+    const reactionOnValueGetter = (initialValue: TEntity) => {
+      this.reactionOnInternalValueDisposer && this.reactionOnInternalValueDisposer();
+      this.internalValue = initialValue;
+      this.reactionOnInternalValueDisposer = reaction(
+        () => this.internalValue,
+        () => {
+          this.onChangeValue(this.internalValue);
+          this.isDirty = true;
+          this.serverErrors = [];
+          this.onChange.call(this);
+          this.checkInternalValue(true);
+        },
+      );
+      this.onChange.call(this);
+      this.checkInternalValue(this.isInitialized ? this.callSetterOnReinitialize : this.callSetterOnInitialize);
+      this.isInitializedValue = true;
+    }
+
+    reactionOnValueGetter(this.initialValueGettter());
+
     this.reactionOnValueGetterDisposer = reaction(
-      valueGetter,
-      initialValue => {
-        this.reactionOnInternalValueDisposer && this.reactionOnInternalValueDisposer();
-        this.internalValue = initialValue;
-        this.reactionOnInternalValueDisposer = reaction(
-          () => this.internalValue,
-          () => {
-            this.onChangeValue(this.internalValue);
-            this.isDirty = true;
-            this.serverErrors = [];
-            this.onChange.call(this);
-            this.checkInternalValue(true);
-          },
-        );
-        this.onChange.call(this);
-        this.checkInternalValue(this.isInitialized ? this.callSetterOnReinitialize : this.callSetterOnInitialize);
-        this.isInitializedValue = true;
-      },
-      { fireImmediately: true },
+      this.initialValueGettter,
+      reactionOnValueGetter,
     );
 
     return this;
@@ -247,7 +277,7 @@ export class FormControl<TEntity = string> extends AbstractControl {
     return this;
   };
 
-  public dispose = (): void => {
+  public dispose(): void {
     super.dispose();
     this.reactionOnValueGetterDisposer && this.reactionOnValueGetterDisposer();
     this.reactionOnInternalValueDisposer && this.reactionOnInternalValueDisposer();
